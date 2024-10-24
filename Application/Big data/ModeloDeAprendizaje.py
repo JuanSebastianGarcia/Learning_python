@@ -25,6 +25,8 @@ noise_words = nltk.corpus.stopwords.words('english')
 bow_counts = CountVectorizer(tokenizer=word_tokenize, stop_words=noise_words, ngram_range=(1, 1))
 
 
+
+
 # Dividir los datos en entrenamiento y prueba (80% entrenamiento, 20% prueba)
 reviews_train, reviews_test, y_train, y_test = train_test_split(bow_counts, data['Sentiment_rating'], test_size=0.2, random_state=0)
 
@@ -34,8 +36,12 @@ lr_model = LogisticRegression(C=1, solver="liblinear")
 # Entrenar el modelo con los datos de entrenamiento
 lr_model.fit(reviews_train, y_train)
 
+
+
 # Hacer predicciones sobre el conjunto de prueba
 y_pred = lr_model.predict(reviews_test)
+
+
 
 # Calcular la precisión del modelo
 accuracy = accuracy_score(y_test, y_pred)
