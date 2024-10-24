@@ -51,35 +51,14 @@ else:
 #creamos el objeto con el contenido html para poder manipularlo
 soup = BeautifulSoup(response.content,'html.parser')
 
-
-#ejmplos de funciones que podemos hacer con soup
-parrafo=soup.find('p')#busca por la etiqueta html
-elemento = soup.find('div',class_='nombre_de_la_clase')#busca el div que tenga la clase css
-elemento = soup.find(id='id')#busca por el id 
-elemento = soup.find('a',href='pagina_ejemplo')#atributo links
-
 """
     para mayor facilidad de comprension, vamos a recorrec bloque por bloque
     hasta donde queremos llegar, que es el html donde esten contenidas todas las noticias
 """
+
 #extraemos el bloque donde se encuentran todas las noticias
-contenedor_principal=soup.find('div',class_='scope').children
+contenedor_principal=soup.find('div',{'data-uri':'cms.cnn.com/_components/zone/instances/clxcvfh6g00003b6k9x1dnjj1@published'}).find_all('span')
 
-#extraemos el elemento hijo, el cual contiene la lista de todas las noticias
-hijos=list(contenedor_principal)
-contenedor_noticias=hijos[0]
-
-"""
-    en el contenedor de noticias existen varios elementos que dividen las noticias por secciones, la idea es 
-    recorrec cada seccion para almacenar las noticias
-"""
-
-#vamos a la primera seccion
-primera_seccion=contenedor_noticias.find('div',class_='zone zone--t-light zone-2-observer').find('div',class_='zone__items layout--wide-left-balanced-2')
-
-#como seccion 1 contiene 3 elementos cada uno con noticias, los vamos a recorrer a los 3
-
-lista_primera_seccion=list(primera_seccion)
-
-for item in lista_primera_seccion:
-    print(item)
+for item in contenedor_principal:
+    print('-------------------------------------------')
+    print(item.text)
