@@ -34,6 +34,8 @@ Conocimientos necesarios
 """
 import requests #libreria para hacer solicitudes HTTP a las paginas
 from bs4 import  BeautifulSoup
+import pandas as pd
+import os
 
 #url de la pagina que se quiere traer
 URL = 'https://edition.cnn.com'
@@ -57,8 +59,26 @@ soup = BeautifulSoup(response.content,'html.parser')
 """
 
 #extraemos el bloque donde se encuentran todas las noticias
-contenedor_principal=soup.find('div',{'data-uri':'cms.cnn.com/_components/zone/instances/clxcvfh6g00003b6k9x1dnjj1@published'}).find_all('span')
+contenedor_principal=soup.find('div',{'data-uri':'cms.cnn.com/_components/scope/instances/clg35wfxg000e47qbfwcgfh5l@published'}).find_all('span')
+
+lista_nombres=[]
 
 for item in contenedor_principal:
-    print('-------------------------------------------')
-    print(item.text)
+    if(item.text != 'Video' and item.text != 'Gallery' and   str(item.text[0]).isdigit() and item.text):
+        lista_nombres.append(item.text)
+        print('------------------------')
+        print(item.text)
+
+
+
+#generamos un dataframe con la lista de titulos
+data = {'noticias':lista_nombres}
+
+data = pd.DataFrame(data)
+
+# Extraer la dirección donde será guardado el archivo
+base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+direccion = os.path.join(base_dir, 'WebScraping/data', 'noticias.csv')
+
+# Guardar el archivo limpio en formato CSV
+data.to_csv(direccion, index=False)
