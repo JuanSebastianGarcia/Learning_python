@@ -32,55 +32,93 @@ Conocimientos necesarios
         Vamos a ingresar a la pagina de CNN news, y vamos a extraer todas las noticias recientes, y vamos a extraer el titulo y el link
         de dichas noticias, y vamos a generar un csv con la informacion
 """
-import requests #libreria para hacer solicitudes HTTP a las paginas
-from bs4 import  BeautifulSoup
-import pandas as pd
-import os
+import requests  # Librería para hacer solicitudes HTTP a las páginas
+from bs4 import BeautifulSoup  # Librería para analizar el contenido HTML
+import pandas as pd  # Librería para manejar dataframes y exportar CSV
+import os  # Librería para manejar rutas de archivos
 
-#url de la pagina que se quiere traer
-URL = 'https://edition.cnn.com'
+# Función para hacer la solicitud HTTP a la URL
+def obtener_contenido_pagina(url):
+    """
+    Realiza una solicitud GET a la URL proporcionada.
+    Devuelve el contenido si la solicitud es exitosa, de lo contrario muestra un error.
+    """
+    response = requests.get(url)
+    if response.status_code == 200:
+        print('Página cargada exitosamente.')
+        return response.content
+    else:
+        print('Error al cargar la página.')
+        return None
 
-#Se realiza una solicitud get para traer el contenido
-response = requests.get(URL)
+# Función para extraer el contenedor principal donde están las noticias
+def extraer_contenedor_principal(soup):
+    """
+    Extrae el contenedor principal que contiene todas las noticias.
+    Devuelve una lista de elementos HTML tipo span.
+    """
+    return soup.find('div', {'data-uri': 'cms.cnn.com/_components/scope/instances/clg35wfxg000e47qbfwcgfh5l@published'}).find_all('span')
 
-#verificamos si hubo resultado
-if response.status_code==200:
-    print('pagina cargada')
-else:
-    print('la pagina no se cargo')
+# Función para filtrar y obtener los títulos relevantes
+def filtrar_titulos(contenedor, palabras_excluidas):
+    """
+    Filtra los títulos del contenedor principal.
+    Evita palabras irrelevantes y entradas que no sean títulos de noticias válidos.
+    """
+    lista_nombres = []
+    for item in contenedor:
+        # Verifica que el texto no esté vacío, no empiece con un dígito, no esté en las palabras excluidas y no contenga símbolos irrelevantes
+        if item.text and not item.text[0].isdigit() and not item.text in palabras_excluidas and '•' not in item.text and not item.text.startswith(' - Source:'):
+            lista_nombres.append(item.text)
+            print('------------------------')
+            print(item.text)
+    return lista_nombres
+
+# Función para guardar los títulos en un archivo CSV
+def guardar_en_csv(lista_nombres):
+    """
+    Crea un DataFrame con los títulos obtenidos y los guarda en un archivo CSV.
+    """
+    # Generamos un dataframe con la lista de títulos
+    data = {'noticias': lista_nombres}
+    df = pd.DataFrame(data)
+    
+    # Extraer la dirección donde será guardado el archivo
+    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    direccion = os.path.join(base_dir, 'WebScraping/data', 'noticias.csv')
+    
+    # Guardar el archivo limpio en formato CSV
+    df.to_csv(direccion, index=False)
+    print(f'Datos guardados en: {direccion}')
+
+# Función principal que organiza el flujo
+def main():
+    """
+    Función principal que organiza el flujo del script:
+    1. Obtiene el contenido de la página.
+    2. Extrae el contenedor de noticias.
+    3. Filtra los títulos.
+    4. Guarda los títulos en un archivo CSV.
+    """
+    URL = 'https://edition.cnn.com'  # URL de la página a procesar
+    palabras_excluidas = ['Video', 'Gallery', 'Live Updates', 'Analysis', 'Essay']  # Términos irrelevantes
+
+    # Obtener el contenido de la página
+    contenido_html = obtener_contenido_pagina(URL)
+    if contenido_html:
+        # Crear el objeto BeautifulSoup con el contenido HTML
+        soup = BeautifulSoup(contenido_html, 'html.parser')
+        
+        # Extraer el contenedor principal de noticias
+        contenedor_principal = extraer_contenedor_principal(soup)
+        
+        # Filtrar los títulos de noticias
+        lista_nombres = filtrar_titulos(contenedor_principal, palabras_excluidas)
+        
+        # Guardar los títulos en un archivo CSV
+        guardar_en_csv(lista_nombres)
 
 
-#creamos el objeto con el contenido html para poder manipularlo
-soup = BeautifulSoup(response.content,'html.parser')
-
-"""
-    para mayor facilidad de comprension, vamos a recorrec bloque por bloque
-    hasta donde queremos llegar, que es el html donde esten contenidas todas las noticias
-"""
-
-#extraemos el bloque donde se encuentran todas las noticias
-contenedor_principal=soup.find('div',{'data-uri':'cms.cnn.com/_components/scope/instances/clg35wfxg000e47qbfwcgfh5l@published'}).find_all('span')
-
-lista_nombres=[]#variable para almacenar todos los titulos obetnidos de noticias
-
-palabras=['Video','Gallery','Live Updates','Analysis','Essay']#cadenas que quiero evitar en los titulos, por irrelevancia
-
-for item in contenedor_principal:
-    if( item.text and not item.text[0].isdigit() and not item.text in palabras and not '•' in item.text and not item.text.startswith(' - Source:')):
-        lista_nombres.append(item.text)
-        print('------------------------')
-        print(item.text)
-
-
-
-#generamos un dataframe con la lista de titulos
-data = {'noticias':lista_nombres}
-
-data = pd.DataFrame(data)
-
-# Extraer la dirección donde será guardado el archivo
-base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-direccion = os.path.join(base_dir, 'WebScraping/data', 'noticias.csv')
-
-# Guardar el archivo limpio en formato CSV
-data.to_csv(direccion, index=False)
+# Ejecutar la función principal
+if __name__ == "__main__":
+    main()
