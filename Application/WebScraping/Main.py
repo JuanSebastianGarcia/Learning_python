@@ -52,6 +52,7 @@ def obtener_contenido_pagina(url):
         return None
 
 
+
 # Función para extraer el contenedor principal donde están las noticias
 def extraer_contenedor_principal(soup):
     """
@@ -59,22 +60,24 @@ def extraer_contenedor_principal(soup):
     """
     return soup.select("div[class^='card container__item']")
 
+# Funcion que unifica los datos ya existentes con los que se quiere guardar
+def unificarDatos(df):
+    """
+        Se extren los datos ya existentes y se unifican con los nuevos
+    """
+    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    direccion = os.path.join(base_dir,'WebScraping/data','noticias.csv')
+
+    data = pd.read_csv(direccion,nrows=50000,
+                       encoding='utf-8',
+                       on_bad_lines='skip',
+                       encoding_errors='replace')
+
+    data1=df['noticia','link']
+    data2=data['noticia','link']
 
 
-# Función para filtrar y obtener los títulos relevantes
-def filtrar_titulos(contenedor, palabras_excluidas):
-    """
-    Filtra los títulos del contenedor principal.
-    Evita palabras irrelevantes y entradas que no sean títulos de noticias válidos.
-    """
-    lista_nombres = []
-    for item in contenedor:
-        # Verifica que el texto no esté vacío, no empiece con un dígito, no esté en las palabras excluidas y no contenga símbolos irrelevantes
-        if item.text and not item.text[0].isdigit() and not item.text in palabras_excluidas and '•' not in item.text and not item.text.startswith(' - Source:'):
-            lista_nombres.append(item.text)
-            print('------------------------')
-            print(item.text)
-    return lista_nombres
+    return pd.concat([data1,data2],ignore_index=True)
 
 
 
@@ -83,10 +86,8 @@ def guardar_en_csv(df):
     """
     Crea un DataFrame con los títulos obtenidos y los guarda en un archivo CSV.
     """
-    # Generamos un dataframe con la lista de títulos
-    #data = {'noticias': lista_nombres}
-    #df = pd.DataFrame(data)
-    
+    df = unificarDatos(df)
+
     # Extraer la dirección donde será guardado el archivo
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     direccion = os.path.join(base_dir, 'WebScraping/data', 'noticias.csv')
@@ -94,9 +95,6 @@ def guardar_en_csv(df):
     # Guardar el archivo limpio en formato CSV
     df.to_csv(direccion, index=False, sep=';')
     print(f'Datos guardados en: {direccion}')
-
-
-
 
 
 
@@ -108,26 +106,27 @@ def cargarDatos(soup):
         se le extrae el elemento en donde esta el link y el titulo de la noticia
     """    
 
-    #se extraer
+    #se extraen los contenedores de noticias
     noticias = extraer_contenedor_principal(soup)
 
-  
+    #se genera un dataframe para almacenar las noticias
     datos=pd.DataFrame(columns=['noticia','link'])
+    
     i=0
-
+    
+    #recorremos las noticias
     for item in noticias:
 
-        
-        textItem = item.find('span')
+        textItem = item.find('span')#titulo de la noticia
 
-        linkItem = item.get('data-open-link')
+        linkItem = item.get('data-open-link')#link de la noticia
 
         if textItem.text and linkItem:
-            datos.loc[i]=[textItem.text,linkItem]
+            datos.loc[i]=[textItem.text,linkItem]#se almacena la informacion
             i+=1
 
         
-    
+    #almacenamos los datos
     guardar_en_csv(datos)
   
 
