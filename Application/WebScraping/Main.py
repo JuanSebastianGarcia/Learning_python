@@ -61,10 +61,12 @@ soup = BeautifulSoup(response.content,'html.parser')
 #extraemos el bloque donde se encuentran todas las noticias
 contenedor_principal=soup.find('div',{'data-uri':'cms.cnn.com/_components/scope/instances/clg35wfxg000e47qbfwcgfh5l@published'}).find_all('span')
 
-lista_nombres=[]
+lista_nombres=[]#variable para almacenar todos los titulos obetnidos de noticias
+
+palabras=['Video','Gallery','Live Updates','Analysis','Essay']#cadenas que quiero evitar en los titulos, por irrelevancia
 
 for item in contenedor_principal:
-    if(item.text != 'Video' and item.text != 'Gallery' and   str(item.text[0]).isdigit() and item.text):
+    if( item.text and not item.text[0].isdigit() and not item.text in palabras and not '•' in item.text and not item.text.startswith(' - Source:')):
         lista_nombres.append(item.text)
         print('------------------------')
         print(item.text)
