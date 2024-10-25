@@ -75,20 +75,20 @@ def filtrar_titulos(contenedor, palabras_excluidas):
     return lista_nombres
 
 # Función para guardar los títulos en un archivo CSV
-def guardar_en_csv(lista_nombres):
+def guardar_en_csv(df):
     """
     Crea un DataFrame con los títulos obtenidos y los guarda en un archivo CSV.
     """
     # Generamos un dataframe con la lista de títulos
-    data = {'noticias': lista_nombres}
-    df = pd.DataFrame(data)
+    #data = {'noticias': lista_nombres}
+    #df = pd.DataFrame(data)
     
     # Extraer la dirección donde será guardado el archivo
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     direccion = os.path.join(base_dir, 'WebScraping/data', 'noticias.csv')
     
     # Guardar el archivo limpio en formato CSV
-    df.to_csv(direccion, index=False)
+    df.to_csv(direccion, index=False, sep=';')
     print(f'Datos guardados en: {direccion}')
 
 # Función principal que organiza el flujo
@@ -110,13 +110,60 @@ def main():
         soup = BeautifulSoup(contenido_html, 'html.parser')
         
         # Extraer el contenedor principal de noticias
-        contenedor_principal = extraer_contenedor_principal(soup)
+        #contenedor_principal = extraer_contenedor_principal(soup)
         
         # Filtrar los títulos de noticias
-        lista_nombres = filtrar_titulos(contenedor_principal, palabras_excluidas)
+        #lista_nombres = filtrar_titulos(contenedor_principal, palabras_excluidas)
         
         # Guardar los títulos en un archivo CSV
-        guardar_en_csv(lista_nombres)
+        #guardar_en_csv(lista_nombres)
+        
+        cargarLinks(soup)
+    
+
+
+
+
+
+#funcion que carga lso encales de las noticias
+def cargarLinks(soup):
+    
+    noticias = soup.select("div[class^='card container__item']")
+
+  
+    datos=pd.DataFrame(columns=['noticia','link'])
+    i=0
+
+    for item in noticias:
+
+        
+        textItem = item.find('span')
+
+        linkItem = item.get('data-open-link')
+
+        if textItem.text and linkItem:
+            datos.loc[i]=[textItem.text,linkItem]
+            i+=1
+
+        
+    
+    guardar_en_csv(datos)
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 # Ejecutar la función principal
