@@ -73,8 +73,8 @@ def unificarDatos(df):
                        on_bad_lines='skip',
                        encoding_errors='replace')
 
-    data1=df['noticia','link']
-    data2=data['noticia','link']
+    data1=df[['noticia','link']]
+    data2=data[['noticia','link']]
 
 
     return pd.concat([data1,data2],ignore_index=True)
@@ -93,7 +93,7 @@ def guardar_en_csv(df):
     direccion = os.path.join(base_dir, 'WebScraping/data', 'noticias.csv')
     
     # Guardar el archivo limpio en formato CSV
-    df.to_csv(direccion, index=False, sep=';')
+    df.to_csv(direccion, index=False)
     print(f'Datos guardados en: {direccion}')
 
 
