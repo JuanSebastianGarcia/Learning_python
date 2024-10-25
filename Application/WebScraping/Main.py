@@ -51,13 +51,15 @@ def obtener_contenido_pagina(url):
         print('Error al cargar la página.')
         return None
 
+
 # Función para extraer el contenedor principal donde están las noticias
 def extraer_contenedor_principal(soup):
     """
-    Extrae el contenedor principal que contiene todas las noticias.
-    Devuelve una lista de elementos HTML tipo span.
+         Extrae todos los contenedores que sean parte de la clase buscada
     """
-    return soup.find('div', {'data-uri': 'cms.cnn.com/_components/scope/instances/clg35wfxg000e47qbfwcgfh5l@published'}).find_all('span')
+    return soup.select("div[class^='card container__item']")
+
+
 
 # Función para filtrar y obtener los títulos relevantes
 def filtrar_titulos(contenedor, palabras_excluidas):
@@ -73,6 +75,8 @@ def filtrar_titulos(contenedor, palabras_excluidas):
             print('------------------------')
             print(item.text)
     return lista_nombres
+
+
 
 # Función para guardar los títulos en un archivo CSV
 def guardar_en_csv(df):
@@ -91,44 +95,21 @@ def guardar_en_csv(df):
     df.to_csv(direccion, index=False, sep=';')
     print(f'Datos guardados en: {direccion}')
 
-# Función principal que organiza el flujo
-def main():
+
+
+
+
+
+#funcion que extrae los datos del hmtl
+def cargarDatos(soup):
+
     """
-    Función principal que organiza el flujo del script:
-    1. Obtiene el contenido de la página.
-    2. Extrae el contenedor de noticias.
-    3. Filtra los títulos.
-    4. Guarda los títulos en un archivo CSV.
-    """
-    URL = 'https://edition.cnn.com'  # URL de la página a procesar
-    palabras_excluidas = ['Video', 'Gallery', 'Live Updates', 'Analysis', 'Essay']  # Términos irrelevantes
+        Extraer todos los elementos que contienen la noticias, y a cada uno de ellos 
+        se le extrae el elemento en donde esta el link y el titulo de la noticia
+    """    
 
-    # Obtener el contenido de la página
-    contenido_html = obtener_contenido_pagina(URL)
-    if contenido_html:
-        # Crear el objeto BeautifulSoup con el contenido HTML
-        soup = BeautifulSoup(contenido_html, 'html.parser')
-        
-        # Extraer el contenedor principal de noticias
-        #contenedor_principal = extraer_contenedor_principal(soup)
-        
-        # Filtrar los títulos de noticias
-        #lista_nombres = filtrar_titulos(contenedor_principal, palabras_excluidas)
-        
-        # Guardar los títulos en un archivo CSV
-        #guardar_en_csv(lista_nombres)
-        
-        cargarLinks(soup)
-    
-
-
-
-
-
-#funcion que carga lso encales de las noticias
-def cargarLinks(soup):
-    
-    noticias = soup.select("div[class^='card container__item']")
+    #se extraer
+    noticias = extraer_contenedor_principal(soup)
 
   
     datos=pd.DataFrame(columns=['noticia','link'])
@@ -149,6 +130,30 @@ def cargarLinks(soup):
     
     guardar_en_csv(datos)
   
+
+
+# Función principal que organiza el flujo
+def main():
+    """
+    Función principal que organiza el flujo del script:
+    1. Obtiene el contenido de la página.
+    2. Extrae el contenedor de noticias.
+    3. Filtra los títulos.
+    4. Guarda los títulos en un archivo CSV.
+    """
+    URL = 'https://edition.cnn.com'  # URL de la página a procesar
+    palabras_excluidas = ['Video', 'Gallery', 'Live Updates', 'Analysis', 'Essay']  # Términos irrelevantes
+
+    # Obtener el contenido de la página
+    contenido_html = obtener_contenido_pagina(URL)
+    if contenido_html:
+        # Crear el objeto BeautifulSoup con el contenido HTML
+        soup = BeautifulSoup(contenido_html, 'html.parser')
+        
+        cargarDatos(soup)
+    
+
+
 
 
 
