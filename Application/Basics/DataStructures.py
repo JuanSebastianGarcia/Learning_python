@@ -8,6 +8,18 @@
 lista1=[1,2,3]
 lista2=[1,"hola",2.3]
 
+#agregar un elemento
+lista1.append(4)
+
+#eliminar un elemento
+lista1.remove(2)
+
+#obtener el index de un elemento
+i=lista1.index(3)
+
+#obtener un elemento a partir del indice
+lista1.__getitem__(1)
+lista1[i]
 
 
 
@@ -21,7 +33,7 @@ lista2=[1,"hola",2.3]
 students={"juan": 3.5, "carlos":4,"juana":3}
 
 #calcular el promedio de los valores de cada uno
-promedio=(sum(students.values)/len(students))
+promedio=(sum(students.values())/len(students))
 
 print(promedio)
 

@@ -60,6 +60,7 @@ def extraer_contenedor_principal(soup):
     """
     return soup.select("div[class^='card container__item']")
 
+
 # Funcion que unifica los datos ya existentes con los que se quiere guardar
 def unificarDatos(df):
     """
@@ -68,6 +69,12 @@ def unificarDatos(df):
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     direccion = os.path.join(base_dir,'WebScraping/data','noticias.csv')
 
+    # Verificar si el archivo existe
+    if not os.path.exists(direccion):
+        # Retornar un DataFrame vacío si no existe el archivo
+        return df
+    
+    #se lee el archivo
     data = pd.read_csv(direccion,nrows=50000,
                        encoding='utf-8',
                        on_bad_lines='skip',
@@ -119,7 +126,7 @@ def cargarDatos(soup):
 
         textItem = item.find('span')#titulo de la noticia
 
-        linkItem = item.get('data-open-link')#link de la noticia
+        linkItem ='https://edition.cnn.com/'+item.get('data-open-link')#link de la noticia
 
         if textItem.text and linkItem:
             datos.loc[i]=[textItem.text,linkItem]#se almacena la informacion
