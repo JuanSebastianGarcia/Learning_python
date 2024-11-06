@@ -8,14 +8,11 @@ los datos que se extraeran son
     1-nombre del producto
     2-precio
     3-numero de estrellas
-    4-lista de reseñas
 
 
 Con base en los datos extraidos analizaremos
     1-Promedio de precios de los productos.
     2-Distribución de precios para visualizar la variación.
-    3-Realizaremos un preprocesamiento de los datos de las reseñas, y se analizara su frecuencia en una nube
-    de palabras
 """
 
 from selenium import webdriver  # Librería para la interacción dinámica con las páginas web
@@ -25,6 +22,7 @@ import time  # Módulo para gestionar pausas y esperas en el flujo del programa
 import os  # Módulo para interactuar con el sistema operativo y gestionar rutas
 from selenium.webdriver.chrome.service import Service  # Módulo para iniciar y manejar el servicio de ChromeDriver
 from bs4 import BeautifulSoup # Modulo para interactuar con el contenido html 
+import pandas as pd
 
 class Proyecto2():
     """
@@ -40,9 +38,15 @@ class Proyecto2():
             2.2 analisis de reseñas
     """ 
 
+    #dataframe para almacenar los datos de los productos
+    data = pd.DataFrame(columns=['Producto','Precio','Estrellas'])
+
+
+
     #metodo constructor
     def __init__(self):
         pass
+
 
 
     #cargar el driver de google para navegar
@@ -72,7 +76,7 @@ class Proyecto2():
         self.driver.get('https://www.amazon.com/-/es/')
 
         #el time permite resolver el CAPTCHA
-        time.sleep(20)
+        time.sleep(10)
 
         #extramos el elemento que usaremos, en este caso la barra de busqueda
         campo_busqueda = self.driver.find_element(By.ID,'twotabsearchtextbox')
@@ -86,26 +90,72 @@ class Proyecto2():
 
 
 
-
-
-
-
-
-    #extraer la informacion de los productos
-    def extraer_datos_productos(self):        
+    #extraer los elementos que contienen los productos
+    def extraer_elementos_producto(self):        
         """
-            extraer lso datos requeridos de cada uno de los resultados en los productos
+        Extraer todos aquellos elementos de html que contienen almacenados los productos
         
         """
         clase = 'puisg-col puisg-col-4-of-12 puisg-col-8-of-16 puisg-col-12-of-20 puisg-col-12-of-24 puis-list-col-right'
 
-        #extraer los elementos de los productos
-        soap=BeautifulSoup(self.driver.page_source,'html.parser0')
+        #extraer los elementos de logs productos
+        soup=BeautifulSoup(self.driver.page_source,'html.parser')
 
-        productos = soap.find()
+        productos = soup.find_all('div',{'class':clase})
+
+        self.extraer_datos_productos(productos)
 
 
 
+
+    #se extraen los datos necesarios de los productos
+    def extraer_datos_productos(self,productos):
+        """
+        Acceder a cada uno de los elementos de informacion de cada producto, y se almacenan en un dataframe
+        """
+        claseTitulo ='a-size-mini a-spacing-none a-color-base s-line-clamp-2'#clase que contiene los elementos del titulo de cada producto
+        clasePrecio='a-offscreen' #clase que contiene los elementos del precio
+
+        for producto in productos:
+
+            titulo=producto.find('h2',{'class':claseTitulo})#titulo del producto
+            estrellas = producto.find('span',{'aria-label':True})#estrellas del producto
+            precio = producto.find('span',{'class':clasePrecio})#precio del producto
+
+            if titulo and estrellas and precio:
+                
+                fila = {
+                    'titulo': titulo.text.strip(),
+                    'precio': precio.text.strip(),
+                    'estrellas': estrellas['aria-label'][:2].strip()
+                }
+                 # Agregar la fila al DataFrame
+                self.data = pd.concat([self.data, pd.DataFrame([fila])], ignore_index=True)
+
+       
+
+        self.guardar_csv()#almacenar csv
+
+
+
+
+    #almacenar un archivo csv
+    def guardar_csv(self):
+        """
+        Almacenar los datos obtenidos en un archivo csv
+        """
+        #extraer la direccion en la que se almacenara el documento
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        direccion = os.path.join(base_dir,'proyecto2/data','productos.csv')
+
+        self.data.to_csv(direccion,index=False)
+
+
+    #calcular el promedio del precio
+    def calcular_promedio_precios(self):
+        """
+        Despues de extraer los datos, calcularemos el promedio de precios de los productos encontrados
+        """
 
 
     def iniciar(self):
@@ -115,13 +165,16 @@ class Proyecto2():
         """
         self.tipo_producto = input('ingresa el producto')#pedimos el dato al usuario
 
-        self.cargar_driver()
-        self.realizar_busqueda()
-        self.extraer_datos_productos()
+        self.cargar_driver()#driver para navegar en google
+        self.realizar_busqueda()#busqueda del producto que se analizara
+        self.extraer_elementos_producto()#se extraen los datos de esos productos
+
+        self.calcular_promedio_precios()#calcular el promedio de precios 
 
 
 
 if __name__ == '__main__':
+    
     proyecto =Proyecto2()
 
     proyecto.iniciar()
