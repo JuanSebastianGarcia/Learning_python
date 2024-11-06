@@ -32,6 +32,19 @@ lista1[i]
 #Crecion de un diccionario
 students={"juan": 3.5, "carlos":4,"juana":3}
 
+#acceder a un diccionario
+students['juan']
+
+
+#reccorrer un diccionario. student.values()
+for item in students.items():
+    print(item)
+
+dic = {'John Smith': '+37682929928' ,'Marry Simpons':'423998200919'}
+
+str.replace()
+
+
 #calcular el promedio de los valores de cada uno
 promedio=(sum(students.values())/len(students))
 
@@ -43,8 +56,7 @@ print(promedio)
 
 """ 
     TUPLAS
-    las tuplas son estructuras muy similares a las listas, la diferencia principal es que las tuplas son listas inmutables
-    lo que quiere decir que sus valores no se pueden cambiar, ni agregar ni eliminar datos
+    q
 
 """
 
