@@ -23,6 +23,7 @@ import os  # Módulo para interactuar con el sistema operativo y gestionar rutas
 from selenium.webdriver.chrome.service import Service  # Módulo para iniciar y manejar el servicio de ChromeDriver
 from bs4 import BeautifulSoup # Modulo para interactuar con el contenido html 
 import pandas as pd
+import matplotlib.pyplot as plt
 
 class Proyecto2():
     """
@@ -96,12 +97,12 @@ class Proyecto2():
         Extraer todos aquellos elementos de html que contienen almacenados los productos
         
         """
-        clase = 'puisg-col puisg-col-4-of-12 puisg-col-8-of-16 puisg-col-12-of-20 puisg-col-12-of-24 puis-list-col-right'
 
         #extraer los elementos de logs productos
         soup=BeautifulSoup(self.driver.page_source,'html.parser')
 
-        productos = soup.find_all('div',{'class':clase})
+        productos = soup.find_all('div',{'class':lambda x: x and 's-result-item' in x.split()})
+
 
         self.extraer_datos_productos(productos)
 
@@ -125,9 +126,9 @@ class Proyecto2():
             if titulo and estrellas and precio:
                 
                 fila = {
-                    'titulo': titulo.text.strip(),
-                    'precio': precio.text.strip(),
-                    'estrellas': estrellas['aria-label'][:2].strip()
+                    'Producto': titulo.text.strip(),
+                    'Precio': precio.text.strip(),
+                    'Estrellas': estrellas['aria-label'][:3].strip()
                 }
                  # Agregar la fila al DataFrame
                 self.data = pd.concat([self.data, pd.DataFrame([fila])], ignore_index=True)
@@ -151,17 +152,58 @@ class Proyecto2():
         self.data.to_csv(direccion,index=False)
 
 
+
     #calcular el promedio del precio
-    def calcular_promedio_precios(self):
+    def procesar_precios(self):
         """
-        Despues de extraer los datos, calcularemos el promedio de precios de los productos encontrados
+        Despues de extraer los datos, calcularemos el promedio de precios de los productos encontrados 
+        y mostraremos una grafica de dispersion de precios
         """
+        precios = []
+        
+        for precio in self.data['Precio']:
+            if '$' in precio:#se evitan los campos que no sean un precio
+                precios.append(float(str(precio).replace(',', '').split('$')[1]))
+
+        promedio = sum(precios)/len(precios)#calcular promedio
+
+        print(f'el promedio de precios de los productos encontrados es: {round(promedio,2)}')
+
+        self.generar_grafica_dispersion(precios)
 
 
+    #generar una grafica de dispercion de precios
+    def generar_grafica_dispersion(self,precios):
+        """
+        Con base en la lista de precios, se genera una gráfica que muestra la dispersión de los datos
+        """
+        plt.figure(figsize=(8, 5))
+        plt.scatter(range(len(precios)), precios)
+
+        # Crear las etiquetas de productos para el eje x
+        etiquetas_x = [f'Producto {i+1}' for i in range(len(precios))]
+
+        # Aplicar las etiquetas al eje x
+        plt.xticks(ticks=range(len(precios)), labels=etiquetas_x, rotation=45)
+
+        plt.title('Gráfica de Dispersión de Precios')
+        plt.xlabel('Productos')
+        plt.ylabel('Precios (USD)')
+
+        plt.tight_layout()  # Ajuste automático para que las etiquetas no se superpongan
+        plt.show()
+
+
+    #iniciar con la ajecucion del programa
     def iniciar(self):
         """
             El metodo inicar se encarga de orquestar el orden de ejecucion del proceso
             del proyecto, siguiendo el orden que esta en la descripcion de la clase
+
+            1.se carga el driver para navegar en google
+            2.se hace la busqueda del producto deseado
+            3.se extraen los datos
+            4.se procesan los datos
         """
         self.tipo_producto = input('ingresa el producto')#pedimos el dato al usuario
 
@@ -169,7 +211,7 @@ class Proyecto2():
         self.realizar_busqueda()#busqueda del producto que se analizara
         self.extraer_elementos_producto()#se extraen los datos de esos productos
 
-        self.calcular_promedio_precios()#calcular el promedio de precios 
+        self.procesar_precios()#calcular el promedio de precios 
 
 
 
