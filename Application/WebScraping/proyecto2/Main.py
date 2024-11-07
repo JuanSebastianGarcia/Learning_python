@@ -54,7 +54,7 @@ class Proyecto2():
     """ 
 
     #dataframe para almacenar los datos de los productos
-    data = pd.DataFrame(columns=['Producto','Precio','Estrellas'])
+    data = pd.DataFrame(columns=['Producto','Precio','Estrellas','Link'])
 
 
     #metodo constructor
@@ -135,7 +135,7 @@ class Proyecto2():
             titulo=producto.find('h2',{'class':claseTitulo})#titulo del producto
             estrellas = producto.find('span',{'aria-label':True})#estrellas del producto
             precio = producto.find('span',{'class':clasePrecio})#precio del producto
-            
+            link=self.extraer_link(producto)
 
             if titulo and estrellas and precio:
                 
@@ -143,6 +143,7 @@ class Proyecto2():
                     'Producto': titulo.text.strip(),
                     'Precio': precio.text.strip(),
                     'Estrellas': estrellas['aria-label'][:3].strip(),
+                    'Link':link
                 }
                  # Agregar la fila al DataFrame
                 self.data = pd.concat([self.data, pd.DataFrame([fila])], ignore_index=True)
@@ -152,16 +153,14 @@ class Proyecto2():
 
 
     #extraer el link de un producto
-    def extraer_reseñas_producto(self,producto):
+    def extraer_link(self,producto):
         """
             Extraer el link de un producto, este link esta almacenado en una etiqueta especial dentro del contenido
-            del producto. con este link se podra acceder a la informacion mas detallada de cada producto y asi
-            extraer las reseñas
+            del producto. con este link se podra acceder a la informacion mas detallada de cada producto
 
             argumentos: 
                 producto - es el elmento html en donde se almacena todo el contenido de un producto
         """
-        reseñas=''
 
         # Clase del elemento que contiene el link del producto
         clase_link = 'a-link-normal s-no-outline'
@@ -169,15 +168,14 @@ class Proyecto2():
         # Intentamos encontrar el enlace
         link_element = producto.find('a', {'class': clase_link})
 
+        link=''
+
         # Verificamos si se encontró el elemento antes de intentar acceder a 'href'
         if link_element:
             link ='https://www.amazon.com'+link_element['href']  # Extraer el link
 
-            print(f'{link} \n')
 
-            reseñas = self.extraer_reseñas(link)
-
-        return reseñas
+        return link
             
 
 
@@ -243,7 +241,7 @@ class Proyecto2():
 
         print(f'el promedio de precios de los productos encontrados es: {round(promedio,2)}')
 
-        self.generar_grafica_dispersion(precios)
+        self.generar_grafica_dispersion(precios[:20])
 
 
     #generar una grafica de dispercion de precios
@@ -280,7 +278,8 @@ class Proyecto2():
             EC.element_to_be_clickable((By.CLASS_NAME, 's-pagination-item.s-pagination-next.s-pagination-button.s-pagination-separator'))
         )
 
-    
+        boton.click()
+
         time.sleep(2)
 
 
@@ -305,9 +304,9 @@ class Proyecto2():
         self.realizar_busqueda()#busqueda del producto que se analizara
 
         #con el for, se pasaran 5 paginas para extraer mas datos
-        for i in range(5):
+        for i in range(10):
             self.extraer_elementos_producto()#se extraen los datos de esos productos
-            
+                
             self.guardar_csv()#guardar los datos en el archivo csv
 
             self.pasar_pagina()#nos aseguramos de seguir a la siguiente pagina de datos
