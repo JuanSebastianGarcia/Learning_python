@@ -22,8 +22,9 @@ import time  # Módulo para gestionar pausas y esperas en el flujo del programa
 import os  # Módulo para interactuar con el sistema operativo y gestionar rutas
 from selenium.webdriver.chrome.service import Service  # Módulo para iniciar y manejar el servicio de ChromeDriver
 from bs4 import BeautifulSoup # Modulo para interactuar con el contenido html 
-import pandas as pd
-import matplotlib.pyplot as plt
+import pandas as pd#libreria para manejar dataframes
+import matplotlib.pyplot as plt#libreria para imprimmir graficas
+import requests
 
 class Proyecto2():
     """
@@ -40,7 +41,7 @@ class Proyecto2():
     """ 
 
     #dataframe para almacenar los datos de los productos
-    data = pd.DataFrame(columns=['Producto','Precio','Estrellas'])
+    data = pd.DataFrame(columns=['Producto','Precio','Estrellas','Reseñas'])
 
 
 
@@ -122,13 +123,17 @@ class Proyecto2():
             titulo=producto.find('h2',{'class':claseTitulo})#titulo del producto
             estrellas = producto.find('span',{'aria-label':True})#estrellas del producto
             precio = producto.find('span',{'class':clasePrecio})#precio del producto
+            
 
             if titulo and estrellas and precio:
                 
+                reseñas = self.extraer_reseñas_producto(producto)
+
                 fila = {
                     'Producto': titulo.text.strip(),
                     'Precio': precio.text.strip(),
-                    'Estrellas': estrellas['aria-label'][:3].strip()
+                    'Estrellas': estrellas['aria-label'][:3].strip(),
+                    'Reseñas':reseñas
                 }
                  # Agregar la fila al DataFrame
                 self.data = pd.concat([self.data, pd.DataFrame([fila])], ignore_index=True)
@@ -137,6 +142,65 @@ class Proyecto2():
 
         self.guardar_csv()#almacenar csv
 
+
+
+
+    #extraer el link de un producto
+    def extraer_reseñas_producto(self,producto):
+        """
+            Extraer el link de un producto, este link esta almacenado en una etiqueta especial dentro del contenido
+            del producto. con este link se podra acceder a la informacion mas detallada de cada producto y asi
+            extraer las reseñas
+
+            argumentos: 
+                producto - es el elmento html en donde se almacena todo el contenido de un producto
+        """
+        reseñas=''
+
+        # Clase del elemento que contiene el link del producto
+        clase_link = 'a-link-normal s-no-outline'
+
+        # Intentamos encontrar el enlace
+        link_element = producto.find('a', {'class': clase_link})
+
+        # Verificamos si se encontró el elemento antes de intentar acceder a 'href'
+        if link_element:
+            link ='https://www.amazon.com'+link_element['href']  # Extraer el link
+
+            print(f'{link} \n')
+
+            reseñas = self.extraer_reseñas(link)
+
+        return reseñas
+            
+
+    #extraer las reseñas de un producto
+    def extraer_reseñas(self,link:str):
+        """
+            Extraer las reseñas de un link en particular. se usa BEauty para acceder al link y a los datos
+
+            parametros:
+                link - enlace del producto
+
+            return 
+                list - lista de reseñas
+        """
+        reseñas=[]#lista de reseñas
+        clase_reseñas='cr-original-review-content'#clase que almacena cada reseña
+        response = requests.get(link, timeout=4)
+
+        if response.status_code==200:
+            soup = BeautifulSoup(response.content,'html.parser')
+
+            all_reseñas = soup.find_all('span',{'class':clase_reseñas})#se buscan las reseñas
+
+            #iterar todas las reseñas
+            for reseña in all_reseñas:
+                reseñas.append(reseña.text)
+        else:
+            print('enlace fallido')
+
+        return ' '.join(reseñas)
 
 
 
