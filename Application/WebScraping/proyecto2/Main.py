@@ -21,21 +21,29 @@ Con base en los datos extraidos analizaremos
     *hay web scraping dinamico y estatico
     *la seguridad no solo de dos, es el mayor obstaculo
     *la puesta de informacion erronea, con o sin culpa, afecta los resultados
+    *usar headers en nuestro bot usando request sera bastante util para burlar cierta seguridad de las plataformas
 """
 
-from selenium import webdriver  # Librería para la interacción dinámica con las páginas web
-from selenium.webdriver.common.by import By  # Módulo para seleccionar elementos en la página por diferentes tipos de localizadores
-from selenium.webdriver.common.keys import Keys  # Módulo para simular la pulsación de teclas como Enter
-from selenium.webdriver.support import expected_conditions as EC
-import time  # Módulo para gestionar pausas y esperas en el flujo del programa
-import os  # Módulo para interactuar con el sistema operativo y gestionar rutas
-from selenium.webdriver.chrome.service import Service  # Módulo para iniciar y manejar el servicio de ChromeDriver
-from bs4 import BeautifulSoup # Modulo para interactuar con el contenido html 
-import pandas as pd#libreria para manejar dataframes
-import matplotlib.pyplot as plt#libreria para imprimmir graficas
-import requests#Modulo para solicitudes http
-from selenium.webdriver.support.ui import WebDriverWait
+# Librerías para la automatización y scraping web con Selenium y BeautifulSoup
+from selenium import webdriver  # Interacción dinámica con páginas web mediante Selenium
+from selenium.webdriver.common.by import By  # Selección de elementos en la página usando diversos localizadores (ID, clase, etc.)
+from selenium.webdriver.common.keys import Keys  # Simulación de pulsación de teclas, como Enter o Tab
+from selenium.webdriver.support import expected_conditions as EC  # Condiciones para esperar eventos específicos (como que un elemento sea visible)
+from selenium.webdriver.support.ui import WebDriverWait  # Gestión de esperas explícitas en Selenium para sincronizar la interacción con la web
+from selenium.webdriver.chrome.service import Service  # Manejo del servicio de ChromeDriver para controlar el navegador
 
+# Librerías adicionales de scraping y manejo de HTML
+from bs4 import BeautifulSoup  # Análisis y manipulación de contenido HTML extraído de una página
+
+# Librerías de manejo de datos y visualización
+import pandas as pd  # Manipulación y análisis de datos con estructuras de DataFrame
+import matplotlib.pyplot as plt  # Creación de gráficos y visualización de datos
+
+# Librerías para manejar peticiones HTTP, control de flujo y esperas en el programa
+import requests  # Envío de solicitudes HTTP y obtención de datos de sitios web
+import time  # Control de pausas y esperas en el flujo del programa
+import os  # Interacción con el sistema operativo, como la gestión de rutas y archivos
+import random  # Generación de valores aleatorios para diferentes usos (ej. esperas aleatorias entre solicitudes)
 
 
 
@@ -54,8 +62,16 @@ class Proyecto2():
     """ 
 
     #dataframe para almacenar los datos de los productos
-    data = pd.DataFrame(columns=['Producto','Precio','Estrellas','Link'])
+    data = pd.DataFrame(columns=['Producto','Precio','Estrellas','Link','Reseñas'])
 
+
+    # Encabezados para simular una solicitud desde un navegador real
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.75 Safari/537.36',
+        'Accept-Language': 'en-US,en;q=0.9',  # Idioma preferido para la respuesta
+        'Accept-Encoding': 'gzip, deflate, br',  # Soporte de compresión de la respuesta
+        'Connection': 'keep-alive',  # Mantener la conexión activa
+    }
 
     #metodo constructor
     def __init__(self):
@@ -75,6 +91,7 @@ class Proyecto2():
         direccion = os.path.join(base_dir, 'drivers', 'chromedriver.exe')
 
         print(direccion)
+        
         # Iniciar el navegador de Chrome con ChromeDriver
         self.driver = webdriver.Chrome(service=Service(direccion))
 
@@ -180,35 +197,40 @@ class Proyecto2():
 
 
 
-    #extraer las reseñas de un producto
-    def extraer_reseñas(self,link:str):
+    #extraer el link de un producto para las reseñas
+    def extraer_reseñas_link(self):
         """
-            Extraer las reseñas de un link en particular. se usa BEauty para acceder al link y a los datos
-
-            parametros:
-                link - enlace del producto
-
-            return 
-                list - lista de reseñas
+            extraer las reseñas de todos los productos. cada registro en el csv tiene su propio link, usando este link
+            accederemos a producto por producto para extraer sus reseñas.
         """
-        reseñas=[]#lista de reseñas
-        clase_reseñas='cr-original-review-content'#clase que almacena cada reseña
-        response = requests.get(link, timeout=4)
+        
+        self.data['Reseñas']=self.data['Link'].apply(lambda x: self.extraer_reseñas(x))
+
+    
+    
+    #extraer las reseñas en un link
+    def extraer_reseñas(self,link):
+        """
+            Navear a la pagina que contiene las reseñas usando beauty y extraer estos datos para cada producto
+        """
+        textos=''
+        response = requests.get(link,headers=self.headers)#solicitur
 
         if response.status_code==200:
-            soup = BeautifulSoup(response.content,'html.parser')
 
-            all_reseñas = soup.find_all('span',{'class':clase_reseñas})#se buscan las reseñas
+            print('conexion establecida')#se indica que la conexion fue exitosa
 
-            #iterar todas las reseñas
-            for reseña in all_reseñas:
-                reseñas.append(reseña.text)
+            soup=BeautifulSoup(response.content,'html.parser')#generar el contenido estatico
+
+            reseñas = soup.find_all('span',{'class':'cr-original-review-content'})#buscar todas las reseñas disponibles
+            
+            textos = '///'.join([reseña.text for reseña in reseñas])
+                
+
         else:
-            print('enlace fallido')
+            print('la conexion fallo')
 
-        time.sleep(5)#esperamos un segundo de espera
-
-        return ' '.join(reseñas)
+        return textos
 
 
 
@@ -241,29 +263,30 @@ class Proyecto2():
 
         print(f'el promedio de precios de los productos encontrados es: {round(promedio,2)}')
 
-        self.generar_grafica_dispersion(precios[:20])
+        self.generar_grafica_dispersion(precios)
 
 
     #generar una grafica de dispercion de precios
     def generar_grafica_dispersion(self,precios):
         """
-        Con base en la lista de precios, se genera una gráfica que muestra la dispersión de los datos
+        Genera una gráfica de dispersión de precios sin relación con el eje X.
         """
         plt.figure(figsize=(8, 5))
-        plt.scatter(range(len(precios)), precios)
 
-        # Crear las etiquetas de productos para el eje x
-        etiquetas_x = [f'Producto {i+1}' for i in range(len(precios))]
-
-        # Aplicar las etiquetas al eje x
-        plt.xticks(ticks=range(len(precios)), labels=etiquetas_x, rotation=45)
+        # Crear coordenadas X aleatorias para cada precio
+        x_values = [random.uniform(0, 1) for _ in range(len(precios))]
+        plt.scatter(x_values, precios)
 
         plt.title('Gráfica de Dispersión de Precios')
-        plt.xlabel('Productos')
         plt.ylabel('Precios (USD)')
+        plt.xticks([])  # Eliminar etiquetas del eje X
 
-        plt.tight_layout()  # Ajuste automático para que las etiquetas no se superpongan
+        plt.tight_layout()
         plt.show()
+
+
+
+
 
     #pasar de pagina en amazon
     def pasar_pagina(self):
@@ -281,7 +304,6 @@ class Proyecto2():
         boton.click()
 
         time.sleep(2)
-
 
 
 
@@ -304,7 +326,7 @@ class Proyecto2():
         self.realizar_busqueda()#busqueda del producto que se analizara
 
         #con el for, se pasaran 5 paginas para extraer mas datos
-        for i in range(10):
+        for i in range(3):
             self.extraer_elementos_producto()#se extraen los datos de esos productos
                 
             self.guardar_csv()#guardar los datos en el archivo csv
@@ -312,9 +334,13 @@ class Proyecto2():
             self.pasar_pagina()#nos aseguramos de seguir a la siguiente pagina de datos
 
 
-
+        self.driver.quit()#se cierra la pestaña de google
 
         self.procesar_precios()#calcular el promedio de precios 
+
+        self.extraer_reseñas_link()#extraer las reseñas para cada producto
+
+        self.guardar_csv()
 
 
 
