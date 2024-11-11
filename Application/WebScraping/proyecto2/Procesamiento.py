@@ -20,12 +20,6 @@ class Procesamiento():
         proceso de scraping, el objetivo es realizar un pre-procesamiento de datos, con el fin de dejarlos
         lo mas limpios posibles, para poder aplicar cualquier tipo de procesamiento.
     """
-
-
-        
-
-
-
     #esta variable contiene la lista de reseñas en ingles
     reseñas=[]
 

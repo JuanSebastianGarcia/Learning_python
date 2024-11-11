@@ -17,6 +17,7 @@ webdriver-manager = "^4.0.2"
 matplotlib = "^3.9.2"
 langdetect = "^1.0.9"
 wordcloud = "^1.9.3"
+fpdf = "^1.7.2"
 
 
 [build-system]

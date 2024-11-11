@@ -22,6 +22,8 @@ Con base en los datos extraidos analizaremos
     *la seguridad no solo de dos, es el mayor obstaculo
     *la puesta de informacion erronea, con o sin culpa, afecta los resultados
     *usar headers en nuestro bot usando request sera bastante util para burlar cierta seguridad de las plataformas
+
+    
 """
 
 # Librerías para la automatización y scraping web con Selenium y BeautifulSoup
@@ -90,7 +92,6 @@ class Proyecto2():
         base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         direccion = os.path.join(base_dir, 'drivers', 'chromedriver.exe')
 
-        print(direccion)
         
         # Iniciar el navegador de Chrome con ChromeDriver
         self.driver = webdriver.Chrome(service=Service(direccion))
@@ -125,7 +126,6 @@ class Proyecto2():
     def extraer_elementos_producto(self):        
         """
         Extraer todos aquellos elementos de html que contienen almacenados los productos
-        
         """
 
         #extraer los elementos de logs productos
@@ -286,8 +286,6 @@ class Proyecto2():
 
 
 
-
-
     #pasar de pagina en amazon
     def pasar_pagina(self):
         """
@@ -326,7 +324,7 @@ class Proyecto2():
         self.realizar_busqueda()#busqueda del producto que se analizara
 
         #con el for, se pasaran 5 paginas para extraer mas datos
-        for i in range(3):
+        for i in range(10):
             self.extraer_elementos_producto()#se extraen los datos de esos productos
                 
             self.guardar_csv()#guardar los datos en el archivo csv
