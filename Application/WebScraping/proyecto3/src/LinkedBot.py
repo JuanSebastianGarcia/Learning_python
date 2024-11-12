@@ -22,6 +22,7 @@ from selenium.webdriver.support import expected_conditions as EC  # Condiciones 
 from selenium.webdriver.support.ui import WebDriverWait  # Gestión de esperas explícitas en Selenium para sincronizar la interacción con la web
 from selenium.webdriver.chrome.service import Service  # Manejo del servicio de ChromeDriver para controlar el navegador
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.action_chains import ActionChains
 
 
 # Librerías para manejar peticiones HTTP, control de flujo y esperas en el programa
@@ -48,15 +49,10 @@ class LinkedBot():
             El método permite iniciar el funcionamiento de LinkedBot. Su operación es la siguiente:
 
             1-Iniciar sesión utilizando el módulo de inicio de sesión, el cual gestiona las sesiones para mantenerse logueado en el sistema.
-
             2-Luego, procederá a buscar un grupo de personas por orden alfabético, comenzando con aquellas que tienen nombres que inician con la letra "A", seguido de "B", "C", y así sucesivamente.
-
             3-Extraer el enlace de los primeros perfiles que aparecen en la búsqueda, sin pasar de página ni cambiar de letra.
-
             4-Después de obtener los enlaces, se visitará el perfil de cada usuario.
-
             5-Extraer la información requerida de cada perfil.
-
             6-Finalmente, volver a iniciar sesión, pero esta vez con una cuenta diferente.
 
             El bot está diseñado no solo para extraer la información mencionada, sino también para realizar una variedad de acciones con el fin de 
@@ -74,9 +70,76 @@ class LinkedBot():
             Además, el bot está configurado para incluir tiempos de espera en puntos específicos y utilizar encabezados personalizados para mantener 
             un bajo perfil. También cuenta con un sistema de detección de captchas, el cual alertará al usuario en caso de que aparezcan.
         """
+        #iniciar sesion    
         self.login()
+
+        #hacer un paso aleatorio
+        self.make_moviment_random()
+
+        time.sleep(3)
+
+
+
+
+    def make_moviment_random(self):
+        """
+            La funcion elige una opcion aleatoriamente, de acuerdo a esta opcion se realizara un movimiento distinto 
+            en la pagina donde esta.
+            1-Movimientos aleatorios del mouse
+            2-Desplazamientos lentos (scrolls)
+            3-Clics aleatorios
+            4-Interacciones con elementos no representativos
+            5-Tiempos de espera variables
+            6-Visita a otras secciones de la plataforma antes de regresar
+        """
+
+        #se elije la opcion aleatoria
+        option = random.randint(1,2)
+
+        #movimientos aleatorios con el mouse
+        if option == 1:
+           
+            self.move_mouse_random()
         
-    #MANEJAR ERRORES
+        #movimientos lentos en scroll
+        elif option==2:
+
+            self.scroll()
+
+            
+
+    #do scroll in the page
+    def scroll(self):
+        """
+            la funcion hace scroll en la pagina que se encuentra
+        """
+            
+        #obtener la altura actual y total de la pagina
+        altura_total_page = self.driver.execute_script("return document.body.scrollHeight")
+        altura_actual = 0
+        avance=50
+
+        #calcular la duracion de los pasos para repartirlos en segundos
+        duracion_avence=5/(altura_total_page/avance)
+
+        while altura_actual < altura_total_page:
+            altura_actual+=avance
+            self.driver.execute_script(f"window.scrollTo(0, {altura_actual});")
+            time.sleep(duracion_avence)
+
+
+
+    #move mouse random in the page
+    def move_mouse_random(self):
+        """
+            Esta funcion hace varios movimientos completamente aleatorios en la pagina
+        """
+        acciones = ActionChains(self.driver)#acciones con selenium
+        acciones.move_by_offset(random.randint(10,100),random.randint(10,100)).perform()#movimiento por coordenadas
+        time.sleep(1)#esperar un tiempo
+        acciones.move_by_offset(random.randint(20,150),random.randint(10,100)).perform()#movimiento por coordenadas
+        time.sleep(1)#esperar un tiempo
+        acciones.move_by_offset(random.randint(20,150),random.randint(10,100)).perform()#movimiento por coordenadas
 
     #iniciar sesion
     def login(self):
@@ -86,7 +149,7 @@ class LinkedBot():
         """
         try:
             #cargar driver
-            self.driver=self.cargar_driver(False)
+            self.driver=self.cargar_driver(True)
 
             #visitar la pagina de linkedin
             self.driver.get('https://www.linkedin.com/login')
@@ -100,10 +163,6 @@ class LinkedBot():
         except:
             #error en el login
             print(f'{time.time()} OCURRIO UN ERROR EN EL PROCESO DE LOGIN')
-
-
-
-
 
     #verify if in one page something is wrong
     def verificar_captcha(self,codigo,link_base):
@@ -161,22 +220,6 @@ class LinkedBot():
             #refrescar la pagina
             self.driver.refresh()
         
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     #inicializa el driver para navefar
     def cargar_driver(self,ventana_activa:bool):
         """
