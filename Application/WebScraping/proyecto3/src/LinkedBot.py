@@ -21,6 +21,7 @@ from selenium.webdriver.common.keys import Keys  # Simulación de pulsación de 
 from selenium.webdriver.support import expected_conditions as EC  # Condiciones para esperar eventos específicos (como que un elemento sea visible)
 from selenium.webdriver.support.ui import WebDriverWait  # Gestión de esperas explícitas en Selenium para sincronizar la interacción con la web
 from selenium.webdriver.chrome.service import Service  # Manejo del servicio de ChromeDriver para controlar el navegador
+from selenium.webdriver.chrome.options import Options
 
 
 # Librerías para manejar peticiones HTTP, control de flujo y esperas en el programa
@@ -76,7 +77,6 @@ class LinkedBot():
         self.login()
         
     #MANEJAR ERRORES
-    #VERIFICAR CAPCHA
 
     #iniciar sesion
     def login(self):
@@ -84,25 +84,82 @@ class LinkedBot():
             Login es la funcion encargada de solicitar las sesion con la cual
             ingresara a linkedin
         """
-        #cargar driver
-        self.cargar_driver()
+        try:
+            #cargar driver
+            self.driver=self.cargar_driver(False)
 
-        #visitar la pagina de linkedin
-        self.driver.get('https://www.linkedin.com/login')
+            #visitar la pagina de linkedin
+            self.driver.get('https://www.linkedin.com/login')
 
-        self.verificar_captcha()
+            #obtener y configurar las cookies de sesion
+            self.driver=self.login_module.get_session(self.driver)  
 
-        #obtener y configurar las cookies de sesion
-        self.driver=self.login_module.get_session(self.driver)  
+            #refrescar la pagina
+            self.driver.refresh()
+
+        except:
+            #error en el login
+            print(f'{time.time()} OCURRIO UN ERROR EN EL PROCESO DE LOGIN')
+
+
+
 
 
     #verify if in one page something is wrong
-    def verificar_captcha(self,codigo_id):
+    def verificar_captcha(self,codigo,link_base):
         """
             Este metodo, para verificar si un capcha o algo inusual aparecio, usa el id
             que recibe por parametro para hacer una busqueda de ese objeto, ya sea boton, etiqueta o campo de texto.
             en caso de que no este presente, significa que algo ocurrio que no se esperaba y se alertara al usurio
+        
+            parametros:
+                *codigo: este codigo debera ser un id de elemento 
         """
+        try:
+            boton = WebDriverWait(self.driver,5).until(
+                EC.element_to_be_clickable((By.ID, codigo))
+            )
+
+        except:
+            print('Anormalidad detectada, abriendo una ventana para revision')
+
+            #datos actuales para reabrir un driver
+            cookies_current=self.driver.get_cookies()
+            url_current=self.driver.current_url
+
+            self.driver.quit()#cerramos el driver 
+
+            #nuevo driver con imagen
+            driver_temporal = self.cargar_driver(True)
+
+            #volver a la misma pagina donde aparecio la anormalidad
+            driver_temporal.get(url_current)
+            
+            #agregar las cookies
+            for cookie in cookies_current:
+                driver_temporal.add_cookie(cookie)
+
+            #refrescar la pagina
+            driver_temporal.refresh()
+
+            #se hace una espera de 100 segundos para resolver el capcha o la anormalidad
+            time.sleep(100)
+
+            #cerramos el driver temporal
+            driver_temporal.quit()
+
+            #despues de 10 segundos, el driver se restaura y continua su proceso
+            self.driver=self.cargar_driver(False)
+
+            #volver a la misma pagina donde aparecio la anormalidad
+            self.driver.get(link_base)
+            
+            #agregar las cookies
+            for cookie in cookies_current:
+                self.driver.add_cookie(cookie)
+
+            #refrescar la pagina
+            self.driver.refresh()
         
 
 
@@ -121,16 +178,29 @@ class LinkedBot():
 
 
     #inicializa el driver para navefar
-    def cargar_driver(self):
+    def cargar_driver(self,ventana_activa:bool):
         """
             Cargar el driver de google, con el cual podremos navegar en las paginas de internet
             e interactuar dinamicamente con dichas paginas. 
+            
+            parametros
+                ventana_activa: es un boolean en el cual si llega un True, indica que se debe
+                abrir una ventana, si es False, indica que la ventana debe estar cerrada
         """
         base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         direccion = os.path.join(base_dir, '../drivers', 'chromedriver.exe')
 
+        # Configurar opciones de Chrome
+        chrome_options = Options()
+
+        #activar la ventana de chrome
+        if ventana_activa == False:
+            chrome_options.add_argument("--headless")  # Activar modo headless
+
         # Iniciar el navegador de Chrome con ChromeDriver
-        self.driver = webdriver.Chrome(service=Service(direccion))
+        driver = webdriver.Chrome(service=Service(direccion),options=chrome_options)
+
+        return driver
 
 
 
