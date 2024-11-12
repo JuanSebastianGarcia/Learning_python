@@ -14,8 +14,10 @@ from selenium.webdriver.chrome.service import Service  # Manejo del servicio de 
 import time
 import os 
 import pandas as pd
+import json
 
 class Extract_key_session():
+    
     """
     
     """
@@ -25,8 +27,12 @@ class Extract_key_session():
                 'user3':{'user':'marthizavp@hotmail.com','password':'martha123'},
     }
 
+
+    #temporal data
     data = []
 
+
+    #constructor
     def __init__(self):
         pass
     
@@ -86,11 +92,9 @@ class Extract_key_session():
         Guardar las cookies en un dataframe 
         """
 
-        #extraer cada cookie de session por separado
-        jsessionid = cookies['JSESSIONID']
-        print(jsessionid)
-        li_at = cookies['li_at']
-        print(li_at)
+        #extraer cada cookie de session por separado y serializa cada cookie a json
+        jsessionid = json.dumps(cookies['JSESSIONID'])
+        li_at = json.dumps(cookies['li_at'])
         self.data.append([clave, jsessionid, li_at])
 
 
@@ -141,7 +145,6 @@ class Extract_key_session():
         """
         Convierte los datos de las credenciales en un dataframe y lo almacena
         """
-        print(self.data)
         #dataframe
         df = pd.DataFrame(self.data,columns=['Usuario', 'JSESSIONID', 'li_at'])
         
@@ -155,10 +158,3 @@ class Extract_key_session():
         df.to_csv(direccion,index=False)
 
 
-
-
-if __name__=='__main__':
-
-    extraer_cookie=Extract_key_session()
-    extraer_cookie.start_extract()
-    

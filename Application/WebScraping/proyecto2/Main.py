@@ -243,7 +243,7 @@ class Proyecto2():
         base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         direccion = os.path.join(base_dir,'proyecto2/data','productos.csv')
 
-        self.data.to_csv(direccion,index=False)
+        self.data.to_csv(direccion,index=False) 
 
 
 

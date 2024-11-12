@@ -23,14 +23,13 @@ from selenium.webdriver.support.ui import WebDriverWait  # Gestión de esperas e
 from selenium.webdriver.chrome.service import Service  # Manejo del servicio de ChromeDriver para controlar el navegador
 
 
-from Application.WebScraping.proyecto3.src.modulos import Login#modulo login para el manejo de sesiones en el bot
-
-
 # Librerías para manejar peticiones HTTP, control de flujo y esperas en el programa
 import requests  # Envío de solicitudes HTTP y obtención de datos de sitios web
 import time  # Control de pausas y esperas en el flujo del programa
 import os  # Interacción con el sistema operativo, como la gestión de rutas y archivos
-import random  # Generación de valores aleatorios para diferentes usos (ej. esperas aleatorias entre solicitudes)
+import random
+
+from modulos.Login import Login # Generación de valores aleatorios para diferentes usos (ej. esperas aleatorias entre solicitudes)
 
 
 class LinkedBot():
@@ -38,7 +37,7 @@ class LinkedBot():
 
     #constructor
     def __init__(self) -> None:
-        self.login=Login()
+        self.login_module=Login()
         pass
 
 
@@ -76,7 +75,8 @@ class LinkedBot():
         """
         self.login()
         
-
+    #MANEJAR ERRORES
+    #VERIFICAR CAPCHA
 
     #iniciar sesion
     def login(self):
@@ -87,7 +87,37 @@ class LinkedBot():
         #cargar driver
         self.cargar_driver()
 
-        self.driver=self.login.get_session(self.driver)   
+        #visitar la pagina de linkedin
+        self.driver.get('https://www.linkedin.com/login')
+
+        self.verificar_captcha()
+
+        #obtener y configurar las cookies de sesion
+        self.driver=self.login_module.get_session(self.driver)  
+
+
+    #verify if in one page something is wrong
+    def verificar_captcha(self,codigo_id):
+        """
+            Este metodo, para verificar si un capcha o algo inusual aparecio, usa el id
+            que recibe por parametro para hacer una busqueda de ese objeto, ya sea boton, etiqueta o campo de texto.
+            en caso de que no este presente, significa que algo ocurrio que no se esperaba y se alertara al usurio
+        """
+        
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
     #inicializa el driver para navefar

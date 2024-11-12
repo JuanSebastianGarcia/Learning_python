@@ -1,8 +1,9 @@
 """
-    Login hace parte del fuincionamiento de linkedbot. La clase login es la encargada de la gestion de la sesion en linkedin y con la cual
-    se podra acceder a la plataforma sin impedimentos.
-    en la sesion se encargara automaticamente las cookies de sesion y  de cambiar de cookies cada vez que sea llamada a la funcion principal, 
-    ademas se asegurara antes de que cada session este activa y funcional.
+    Login hace parte del fuincionamiento de linkedbot. La clase login es la encargada de la gestion de la sesion en 
+    linkedin y con la cual se podra acceder a la plataforma sin impedimentos.
+    La clase Login se encargara automaticamente de cargar las cookies de sesion y  de cambiar de cookies cada vez que sea 
+    llamada, por lo que si en un momento se usa las cookies del usuario 1. en la siguiente se llamada se usaran las cookies
+    del usuario 2
     
 """
 
@@ -11,7 +12,10 @@ import pandas as pd
 import json
 import time
 
-from Application.WebScraping.proyecto3.src.extraer_llaves.Extract_key_session import Extract_key_session
+from extraer_llaves.Extract_key_session import Extract_key_session
+
+
+
 
 class Login():
 
@@ -73,11 +77,11 @@ class Login():
         del dataframe de datos. ademas, verifica si el tiempo de expiracion aun 
         esta vigente, en caso de que no, se hace una solicitud de logeo
         """
-        row = self.data.iloc[self.index]
+        row = self.data.iloc[self.index]#extraer las cookies necesarias
 
         #extraer las cookies
-        cookie_jsession=row['JSESSIONID']
-        cookie_liat=row['li_at']
+        cookie_jsession = row['JSESSIONID']
+        cookie_liat = row['li_at']
 
         #convertir las cookies a json
         cookies_jsession_json=json.loads(cookie_jsession)
