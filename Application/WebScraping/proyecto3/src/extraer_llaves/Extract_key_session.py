@@ -39,6 +39,7 @@ class Extract_key_session():
         Comenzar con el inicio de sesion en likedin para extraer la cookie con 
         el token para iniciar sesion
         """
+        i=1
         #usar un for para recorrer todas las credenciales
         for clave,item in self.credentials.items():
 
@@ -52,9 +53,12 @@ class Extract_key_session():
             cookies = self.extract_cookie()
 
             #save cookie
-            self.save_cookie(clave,cookies)
+            self.save_cookie(i,cookies)
+            
 
             self.driver.quit()
+
+            i+=1
 
         self.save_dataframe()
 
@@ -88,6 +92,7 @@ class Extract_key_session():
         li_at = cookies['li_at']
         print(li_at)
         self.data.append([clave, jsessionid, li_at])
+
 
     
     #add_ credentials to the input user and input password
@@ -124,7 +129,7 @@ class Extract_key_session():
 
         cookies = self.driver.get_cookies()
 
-        session_cookies= {cookie['name']: cookie['value'] for cookie in cookies if cookie['name'] in ['JSESSIONID', 'li_at']}
+        session_cookies= {cookie['name']: cookie for cookie in cookies if cookie['name'] in ['JSESSIONID', 'li_at']}
     
 
         return session_cookies
@@ -139,13 +144,16 @@ class Extract_key_session():
         print(self.data)
         #dataframe
         df = pd.DataFrame(self.data,columns=['Usuario', 'JSESSIONID', 'li_at'])
-        print(df)
+        
+
         #dir
         base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        direccion = os.path.join(base_dir, '../data', 'session_cookies.csv')
+        direccion = os.path.join(base_dir, 'data', 'session_cookies.csv')
 
+        
         #save dataframe
         df.to_csv(direccion,index=False)
+
 
 
 
@@ -153,3 +161,4 @@ if __name__=='__main__':
 
     extraer_cookie=Extract_key_session()
     extraer_cookie.start_extract()
+    
