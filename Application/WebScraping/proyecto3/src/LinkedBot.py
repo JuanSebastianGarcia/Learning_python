@@ -30,12 +30,24 @@ import requests  # Envío de solicitudes HTTP y obtención de datos de sitios we
 import time  # Control de pausas y esperas en el flujo del programa
 import os  # Interacción con el sistema operativo, como la gestión de rutas y archivos
 import random
+import logging as log
 
 from modulos.Login import Login # Generación de valores aleatorios para diferentes usos (ej. esperas aleatorias entre solicitudes)
 
 
 class LinkedBot():
 
+
+    # Configuración global del archivo de log
+    log.basicConfig(
+        filename='linkedbot_flujo.log',    # Nombre del archivo de log
+        level=log.DEBUG,               # Nivel mínimo de mensajes que se registrarán
+        format='%(asctime)s - %(levelname)s - %(message)s'  # Formato del log
+    )
+
+
+    letra_actual='a'
+    pagina_actual='1'
 
     #constructor
     def __init__(self) -> None:
@@ -70,17 +82,36 @@ class LinkedBot():
             Además, el bot está configurado para incluir tiempos de espera en puntos específicos y utilizar encabezados personalizados para mantener 
             un bajo perfil. También cuenta con un sistema de detección de captchas, el cual alertará al usuario en caso de que aparezcan.
         """
+        log.info('Iniciando linkedbot')
+
         #iniciar sesion    
         self.login()
 
         #hacer un paso aleatorio
         self.make_moviment_random()
 
-        time.sleep(3)
+        #search people
+        self.search_people()
 
 
+    #search people
+    def search_people(self):
+        """
+            Esta funcion se encargara de hacer una solicitud de personas con la propia api de busqeuda de usuarios.
+            los usuarios que busacara los hara en orden alfabetico [a-z] y extraera los links de la pagina de personas en
+            la que se encuentra
+        """
+        #seleccionar la barra de busqueda 
+        search_box=self.driver.find_element(By.ID,'global-nav-typeahead')
+
+        search_box.send_keys(self.letra_actural)
+
+        search_box.send_keys(Keys.RETURN)
+
+        button_enterprise=self.driver.find_element(By.ID,)
 
 
+    #make some movement random in the page
     def make_moviment_random(self):
         """
             La funcion elige una opcion aleatoriamente, de acuerdo a esta opcion se realizara un movimiento distinto 
@@ -88,13 +119,12 @@ class LinkedBot():
             1-Movimientos aleatorios del mouse
             2-Desplazamientos lentos (scrolls)
             3-Clics aleatorios
-            4-Interacciones con elementos no representativos
-            5-Tiempos de espera variables
-            6-Visita a otras secciones de la plataforma antes de regresar
+            4-Tiempos de espera variables
+            5-Visita a otras secciones de la plataforma antes de regresar
         """
 
         #se elije la opcion aleatoria
-        option = random.randint(1,2)
+        option = random.randint(1,6)
 
         #movimientos aleatorios con el mouse
         if option == 1:
@@ -106,7 +136,75 @@ class LinkedBot():
 
             self.scroll()
 
+        #click in buttons and irrelevant elements
+        elif option==3:
             
+            self.click_random()
+
+        #wait time
+        elif option == 4:
+            
+            self.wait()
+
+        #ir a una pagina de linkedin y volver
+        elif option == 5:
+            
+            self.go_and_back()
+        
+        log.info('Movimiento aleatorio hecho')
+
+
+    #ir a otra pagina y volver
+    def go_and_back(self):
+        """
+            Esta funcion se encargara de viajar a pagina de linkedin, esperar un poco y volver
+        """
+        #ir a otra pagina
+        self.driver.get('https://www.linkedin.com/jobs/')
+
+        #esperar
+        time.sleep(4)
+
+        #volver a la pagina anterior
+        self.driver.back()
+
+    #wait a time 
+    def wait(self):
+        """
+            Esta funcion, esperara un poco de tiempo en la pagina en la que esta, mientras se simula que el mouse
+            viaja a un elemetno y le da click. en este claso el elemento es la barra de busqueda
+        """
+        acciones=ActionChains(self.driver)#acciones con selenium
+        acciones.move_to_element('global-nav-search')
+
+        button=self.driver.find_element(By.ID,'global-nav-search')
+
+        button.click()
+
+        time.sleep(3)
+
+
+    #make some click randomñ
+    def click_random(self):     
+        """
+            La funcion hace algunos clicks  en varios botones. 
+            estos botones estan previamente analizados para asegurarnos de que estaran ahi en cualquier situacion
+            por lo que en todo el proceso del bot los botones estaran presentes .
+        """         
+        #buscar los dos elementos a cliquear
+        profile_button = self.driver.find_element(By.ID,'ember240')
+        chat_button = self.driver.find_element(By.ID,'ember15')
+
+        profile_button.click()
+
+        time.sleep(2)
+
+        profile_button.click()
+
+        time.sleep(1)
+
+        chat_button.click()
+
 
     #do scroll in the page
     def scroll(self):
@@ -128,7 +226,6 @@ class LinkedBot():
             time.sleep(duracion_avence)
 
 
-
     #move mouse random in the page
     def move_mouse_random(self):
         """
@@ -140,6 +237,7 @@ class LinkedBot():
         acciones.move_by_offset(random.randint(20,150),random.randint(10,100)).perform()#movimiento por coordenadas
         time.sleep(1)#esperar un tiempo
         acciones.move_by_offset(random.randint(20,150),random.randint(10,100)).perform()#movimiento por coordenadas
+
 
     #iniciar sesion
     def login(self):
@@ -157,12 +255,15 @@ class LinkedBot():
             #obtener y configurar las cookies de sesion
             self.driver=self.login_module.get_session(self.driver)  
 
+            time.sleep(2)
             #refrescar la pagina
             self.driver.refresh()
 
+            log.info(f'Cookies de session de usuario agregadas')
         except:
             #error en el login
             print(f'{time.time()} OCURRIO UN ERROR EN EL PROCESO DE LOGIN')
+
 
     #verify if in one page something is wrong
     def verificar_captcha(self,codigo,link_base):
@@ -219,7 +320,8 @@ class LinkedBot():
 
             #refrescar la pagina
             self.driver.refresh()
-        
+
+
     #inicializa el driver para navefar
     def cargar_driver(self,ventana_activa:bool):
         """
