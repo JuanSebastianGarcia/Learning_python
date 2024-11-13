@@ -46,8 +46,8 @@ class LinkedBot():
     )
 
 
-    letra_actual='a'
-    pagina_actual='1'
+    letra_actual='l'
+    pagina_actual=15
 
     #constructor
     def __init__(self) -> None:
@@ -91,24 +91,54 @@ class LinkedBot():
         self.make_moviment_random()
 
         #search people
-        self.search_people()
+        self.search_enterprise()
+
+        print(self.links)
+
 
 
     #search people
-    def search_people(self):
+    def search_enterprise(self):
         """
             Esta funcion se encargara de hacer una solicitud de personas con la propia api de busqeuda de usuarios.
             los usuarios que busacara los hara en orden alfabetico [a-z] y extraera los links de la pagina de personas en
             la que se encuentra
         """
-        #seleccionar la barra de busqueda 
-        search_box=self.driver.find_element(By.ID,'global-nav-typeahead')
+        #link para la busqueda de empresas
+        link=f'https://www.linkedin.com/search/results/companies/?keywords={self.letra_actual}&origin=SWITCH_SEARCH_VERTICAL&page={self.pagina_actual}&sid=A)n'
+     
+        #se hace la busqueda 
+        self.driver.get(link)
 
-        search_box.send_keys(self.letra_actural)
+        #verificar que no haya captcha
+        self.verificar_captcha(codigo='global-nav-typeahead',link_base=link)
 
-        search_box.send_keys(Keys.RETURN)
+        #buscar los elementos que contienen los links de cada empresa
+        elements_links=self.driver.find_elements(By.CLASS_NAME,'app-aware-link  scale-down')
 
-        button_enterprise=self.driver.find_element(By.ID,)
+        self.links = [element.get_attribute('href') for element in elements_links]
+
+        log.info('Links de empresas fueron extraidos')
+
+        #update the variables that use in the search
+        self.update_page_letter()
+
+
+
+    #Update variables 'letra_actual' and 'pagina_actual'
+    def update_page_letter(self):
+        """
+            Esta funcion se encarga de actualizar las variables de letra actual y pagina actual.
+            hay dos posibilidades de actualizacion
+                -si la pagina < 100  pagina +=1
+                -si la pagina es = 100, entonces aumentar pasar de letra y reiniciar la pagina a 0
+        """
+        if(self.pagina_actual==100):
+            self.pagina_actual=0
+            self.letra_actual = chr(ord(self.letra_actual)+1)
+        else:
+            self.pagina_actual+=1
+
 
 
     #make some movement random in the page
@@ -168,20 +198,24 @@ class LinkedBot():
         #volver a la pagina anterior
         self.driver.back()
 
+
+
     #wait a time 
     def wait(self):
         """
             Esta funcion, esperara un poco de tiempo en la pagina en la que esta, mientras se simula que el mouse
             viaja a un elemetno y le da click. en este claso el elemento es la barra de busqueda
         """
+        #se busca el elemento
+        box_search=self.driver.find_element(By.ID,'global-nav-search')
+
         acciones=ActionChains(self.driver)#acciones con selenium
-        acciones.move_to_element('global-nav-search')
+        acciones.move_to_element(box_search).perform()
 
-        button=self.driver.find_element(By.ID,'global-nav-search')
-
-        button.click()
+        box_search.click()
 
         time.sleep(3)
+
 
 
     #make some click randomñ
@@ -204,6 +238,7 @@ class LinkedBot():
         time.sleep(1)
 
         chat_button.click()
+
 
 
     #do scroll in the page
@@ -273,11 +308,11 @@ class LinkedBot():
             en caso de que no este presente, significa que algo ocurrio que no se esperaba y se alertara al usurio
         
             parametros:
-                *codigo: este codigo debera ser un id de elemento 
+                *codigo: este codigo debera ser un id
         """
         try:
             boton = WebDriverWait(self.driver,5).until(
-                EC.element_to_be_clickable((By.ID, codigo))
+                EC.presence_of_element_located((By.ID, codigo))
             )
 
         except:
@@ -299,8 +334,10 @@ class LinkedBot():
             for cookie in cookies_current:
                 driver_temporal.add_cookie(cookie)
 
-            #refrescar la pagina
-            driver_temporal.refresh()
+            time.sleep(2)
+
+            #volver a la misma pagina donde aparecio la anormalidad
+            driver_temporal.get(url_current)
 
             #se hace una espera de 100 segundos para resolver el capcha o la anormalidad
             time.sleep(100)
