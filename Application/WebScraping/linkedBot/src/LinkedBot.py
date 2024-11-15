@@ -13,6 +13,10 @@ Modulos
     Search - realiza las busquedas de n usuarios
     Extraction - extrae la informacion de cada usuario
     save - almacena la informacion en un csv y actualiza un archivo .log
+
+    aprendizajes:
+        *estructura de una cookie
+        *la programacion dinamica afecta la localizacion de elemento 
     """
 # Librerías para la automatización y scraping web con Selenium y BeautifulSoup
 from selenium import webdriver  # Interacción dinámica con páginas web mediante Selenium
@@ -25,6 +29,7 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.action_chains import ActionChains
 
 
+
 # Librerías para manejar peticiones HTTP, control de flujo y esperas en el programa
 import requests  # Envío de solicitudes HTTP y obtención de datos de sitios web
 import time  # Control de pausas y esperas en el flujo del programa
@@ -33,7 +38,7 @@ import random
 import logging as log
 
 from modulos.Login import Login # Generación de valores aleatorios para diferentes usos (ej. esperas aleatorias entre solicitudes)
-
+from modulos.Search import Search 
 
 class LinkedBot():
 
@@ -41,17 +46,16 @@ class LinkedBot():
     # Configuración global del archivo de log
     log.basicConfig(
         filename='linkedbot_flujo.log',    # Nombre del archivo de log
-        level=log.DEBUG,               # Nivel mínimo de mensajes que se registrarán
+        level=log.INFO,               # Nivel mínimo de mensajes que se registrarán
         format='%(asctime)s - %(levelname)s - %(message)s'  # Formato del log
     )
 
 
-    letra_actual='l'
-    pagina_actual=15
-
     #constructor
     def __init__(self) -> None:
+        self.links=[]
         self.login_module=Login()
+        self.serach_module=Search()
         pass
 
 
@@ -91,53 +95,30 @@ class LinkedBot():
         self.make_moviment_random()
 
         #search people
-        self.search_enterprise()
+        self.search()
+        
+
+        
+
+
+
+    #search people
+    def search(self):
+        """
+            Esta funcion es la encargada de gestionar la busqeuda, llamando la
+            funcion principal del modulo de busqueda y almacenando los links
+        """
+        #vaciar los links anteriores
+        self.links=[]
+
+        #solicitar los links
+        self.links = self.serach_module.search(self.driver,log)
 
         print(self.links)
 
 
 
-    #search people
-    def search_enterprise(self):
-        """
-            Esta funcion se encargara de hacer una solicitud de personas con la propia api de busqeuda de usuarios.
-            los usuarios que busacara los hara en orden alfabetico [a-z] y extraera los links de la pagina de personas en
-            la que se encuentra
-        """
-        #link para la busqueda de empresas
-        link=f'https://www.linkedin.com/search/results/companies/?keywords={self.letra_actual}&origin=SWITCH_SEARCH_VERTICAL&page={self.pagina_actual}&sid=A)n'
-     
-        #se hace la busqueda 
-        self.driver.get(link)
 
-        #verificar que no haya captcha
-        self.verificar_captcha(codigo='global-nav-typeahead',link_base=link)
-
-        #buscar los elementos que contienen los links de cada empresa
-        elements_links=self.driver.find_elements(By.CLASS_NAME,'app-aware-link  scale-down')
-
-        self.links = [element.get_attribute('href') for element in elements_links]
-
-        log.info('Links de empresas fueron extraidos')
-
-        #update the variables that use in the search
-        self.update_page_letter()
-
-
-
-    #Update variables 'letra_actual' and 'pagina_actual'
-    def update_page_letter(self):
-        """
-            Esta funcion se encarga de actualizar las variables de letra actual y pagina actual.
-            hay dos posibilidades de actualizacion
-                -si la pagina < 100  pagina +=1
-                -si la pagina es = 100, entonces aumentar pasar de letra y reiniciar la pagina a 0
-        """
-        if(self.pagina_actual==100):
-            self.pagina_actual=0
-            self.letra_actual = chr(ord(self.letra_actual)+1)
-        else:
-            self.pagina_actual+=1
 
 
 
@@ -168,8 +149,8 @@ class LinkedBot():
 
         #click in buttons and irrelevant elements
         elif option==3:
-            
-            self.click_random()
+            """"""
+            #self.click_random()
 
         #wait time
         elif option == 4:
@@ -182,6 +163,7 @@ class LinkedBot():
             self.go_and_back()
         
         log.info('Movimiento aleatorio hecho')
+
 
 
     #ir a otra pagina y volver
@@ -226,8 +208,8 @@ class LinkedBot():
             por lo que en todo el proceso del bot los botones estaran presentes .
         """         
         #buscar los dos elementos a cliquear
-        profile_button = self.driver.find_element(By.ID,'ember240')
-        chat_button = self.driver.find_element(By.ID,'ember15')
+        profile_button = self.driver.find_element(By.CLASS_NAME,'global-nav__primary-link-app-launcher-menu-trigger')
+
 
         profile_button.click()
 
@@ -237,7 +219,6 @@ class LinkedBot():
 
         time.sleep(1)
 
-        chat_button.click()
 
 
 
@@ -261,6 +242,8 @@ class LinkedBot():
             time.sleep(duracion_avence)
 
 
+
+
     #move mouse random in the page
     def move_mouse_random(self):
         """
@@ -274,6 +257,7 @@ class LinkedBot():
         acciones.move_by_offset(random.randint(20,150),random.randint(10,100)).perform()#movimiento por coordenadas
 
 
+
     #iniciar sesion
     def login(self):
         """
@@ -281,8 +265,10 @@ class LinkedBot():
             ingresara a linkedin
         """
         try:
+            log.info('ingresando a la cuenta')
+
             #cargar driver
-            self.driver=self.cargar_driver(True)
+            self.driver=self.cargar_driver(False)
 
             #visitar la pagina de linkedin
             self.driver.get('https://www.linkedin.com/login')
@@ -291,10 +277,11 @@ class LinkedBot():
             self.driver=self.login_module.get_session(self.driver)  
 
             time.sleep(2)
+
             #refrescar la pagina
             self.driver.refresh()
 
-            log.info(f'Cookies de session de usuario agregadas')
+            log.info(f'ingreso satisfactorio')
         except:
             #error en el login
             print(f'{time.time()} OCURRIO UN ERROR EN EL PROCESO DE LOGIN')
