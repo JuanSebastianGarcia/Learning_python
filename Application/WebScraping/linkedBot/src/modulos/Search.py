@@ -45,6 +45,9 @@ class Search():
             return 
                 devuelve la lista de links encontrada
         """
+        #vaciar la lista
+        self.links=[]
+
         #actualizacion del driver
         self.driver=driver
 
@@ -58,7 +61,7 @@ class Search():
         self.verificar_captcha(codigo='global-nav-typeahead',link_base=link)
 
         #extraer los links
-        self.extract_links(self.driver,log)
+        self.extract_links(log)
 
         log.info('Links de empresas fueron extraidos')
 
@@ -201,4 +204,4 @@ class Search():
             self.pagina_actual+=1
             log.info('pagina actualizada')
 
-        self.links=[]
+        

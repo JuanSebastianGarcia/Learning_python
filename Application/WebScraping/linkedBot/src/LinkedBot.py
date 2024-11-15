@@ -22,23 +22,23 @@ Modulos
 from selenium import webdriver  # Interacción dinámica con páginas web mediante Selenium
 from selenium.webdriver.common.by import By  # Selección de elementos en la página usando diversos localizadores (ID, clase, etc.)
 from selenium.webdriver.common.keys import Keys  # Simulación de pulsación de teclas, como Enter o Tab
-from selenium.webdriver.support import expected_conditions as EC  # Condiciones para esperar eventos específicos (como que un elemento sea visible)
 from selenium.webdriver.support.ui import WebDriverWait  # Gestión de esperas explícitas en Selenium para sincronizar la interacción con la web
+from selenium.webdriver.support import expected_conditions as EC  # Condiciones para esperar eventos específicos (como que un elemento sea visible)
 from selenium.webdriver.chrome.service import Service  # Manejo del servicio de ChromeDriver para controlar el navegador
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.common.action_chains import ActionChains
+from selenium.webdriver.chrome.options import Options  # Configuración avanzada del navegador Chrome (ej. modo headless)
+from selenium.webdriver.common.action_chains import ActionChains  # Automatización de interacciones avanzadas, como arrastrar y soltar
 
-
-
-# Librerías para manejar peticiones HTTP, control de flujo y esperas en el programa
+# Librerías para manejar peticiones HTTP y control de flujo
 import requests  # Envío de solicitudes HTTP y obtención de datos de sitios web
 import time  # Control de pausas y esperas en el flujo del programa
 import os  # Interacción con el sistema operativo, como la gestión de rutas y archivos
-import random
-import logging as log
+import random  # Generación de valores aleatorios para diferentes usos (ej. esperas aleatorias entre solicitudes)
+import logging as log  # Gestión de logs para registrar eventos del programa
 
-from modulos.Login import Login # Generación de valores aleatorios para diferentes usos (ej. esperas aleatorias entre solicitudes)
-from modulos.Search import Search 
+# Módulos personalizados del proyecto
+from modulos.Login import Login  # Módulo para manejar la lógica de inicio de sesión
+from modulos.Search import Search  # Módulo para realizar búsquedas específicas
+
 
 class LinkedBot():
 
@@ -53,9 +53,9 @@ class LinkedBot():
 
     #constructor
     def __init__(self) -> None:
-        self.links=[]
-        self.login_module=Login()
-        self.serach_module=Search()
+        self.links=[]#variable para almacenar los links extraidos
+        self.login_module=Login() #modulo para el login
+        self.serach_module=Search() #modulo para la busqueda
         pass
 
 
@@ -99,9 +99,6 @@ class LinkedBot():
         
 
         
-
-
-
     #search people
     def search(self):
         """
@@ -118,10 +115,6 @@ class LinkedBot():
 
 
 
-
-
-
-
     #make some movement random in the page
     def make_moviment_random(self):
         """
@@ -129,13 +122,13 @@ class LinkedBot():
             en la pagina donde esta.
             1-Movimientos aleatorios del mouse
             2-Desplazamientos lentos (scrolls)
-            3-Clics aleatorios
-            4-Tiempos de espera variables
-            5-Visita a otras secciones de la plataforma antes de regresar
+            3-Tiempos de espera variables
+            4-Visita a otras secciones de la plataforma antes de regresar
         """
+        time.sleep(1)
 
         #se elije la opcion aleatoria
-        option = random.randint(1,6)
+        option = 3#random.randint(1,4)
 
         #movimientos aleatorios con el mouse
         if option == 1:
@@ -147,18 +140,13 @@ class LinkedBot():
 
             self.scroll()
 
-        #click in buttons and irrelevant elements
-        elif option==3:
-            """"""
-            #self.click_random()
-
         #wait time
-        elif option == 4:
+        elif option == 3:
             
             self.wait()
 
         #ir a una pagina de linkedin y volver
-        elif option == 5:
+        elif option == 4:
             
             self.go_and_back()
         
@@ -171,8 +159,20 @@ class LinkedBot():
         """
             Esta funcion se encargara de viajar a pagina de linkedin, esperar un poco y volver
         """
-        #ir a otra pagina
-        self.driver.get('https://www.linkedin.com/jobs/')
+        #se otiene una opcion para la pagina
+        opcion=random.randint(1,3)
+
+        if opcion==1:
+            #ir a a la pagina de trabajos
+            self.driver.get('https://www.linkedin.com/jobs/')
+
+        elif opcion ==2:
+            #ir a la pagina de red
+            self.driver.get('https://www.linkedin.com/mynetwork/')
+
+        elif opcion==3:                
+            #ir a la pagina de notificaciones
+            self.driver.get('https://www.linkedin.com/notifications/?filter=all')
 
         #esperar
         time.sleep(4)
@@ -185,56 +185,41 @@ class LinkedBot():
     #wait a time 
     def wait(self):
         """
-            Esta funcion, esperara un poco de tiempo en la pagina en la que esta, mientras se simula que el mouse
-            viaja a un elemetno y le da click. en este claso el elemento es la barra de busqueda
+            Esta funcion, esperara un poco de tiempo en la pagina en la que esta, mientras se simula que se dirige 
+             a un  elemetno y le da click. en este claso el elemento es la barra de busqueda
         """
         #se busca el elemento
         box_search=self.driver.find_element(By.ID,'global-nav-search')
 
         acciones=ActionChains(self.driver)#acciones con selenium
+
+        #se dirige al elemento
         acciones.move_to_element(box_search).perform()
 
+        #se da click en el elemento
         box_search.click()
 
-        time.sleep(3)
-
-
-
-    #make some click randomñ
-    def click_random(self):     
-        """
-            La funcion hace algunos clicks  en varios botones. 
-            estos botones estan previamente analizados para asegurarnos de que estaran ahi en cualquier situacion
-            por lo que en todo el proceso del bot los botones estaran presentes .
-        """         
-        #buscar los dos elementos a cliquear
-        profile_button = self.driver.find_element(By.CLASS_NAME,'global-nav__primary-link-app-launcher-menu-trigger')
-
-
-        profile_button.click()
-
-        time.sleep(2)
-
-        profile_button.click()
-
-        time.sleep(1)
-
-
+        #se espera cierto tiempo aleatorio
+        time.sleep(random.randint(2,5))
 
 
     #do scroll in the page
     def scroll(self):
         """
-            la funcion hace scroll en la pagina que se encuentra
+            la funcion hace scroll en la pagina que se encuentra, en este caso simula 
+            ver publicaciones y otro contenido
         """
             
         #obtener la altura actual y total de la pagina
         altura_total_page = self.driver.execute_script("return document.body.scrollHeight")
         altura_actual = 0
-        avance=50
+        avance=random.randint(40,70)
+
+        #segundos que dura el scrol
+        segundos=random.randint(3,5)
 
         #calcular la duracion de los pasos para repartirlos en segundos
-        duracion_avence=5/(altura_total_page/avance)
+        duracion_avence=segundos/(altura_total_page/avance)
 
         while altura_actual < altura_total_page:
             altura_actual+=avance
@@ -268,7 +253,7 @@ class LinkedBot():
             log.info('ingresando a la cuenta')
 
             #cargar driver
-            self.driver=self.cargar_driver(False)
+            self.driver=self.cargar_driver(True)
 
             #visitar la pagina de linkedin
             self.driver.get('https://www.linkedin.com/login')
