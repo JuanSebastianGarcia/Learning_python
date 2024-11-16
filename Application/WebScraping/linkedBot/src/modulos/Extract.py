@@ -20,7 +20,7 @@ class Extract():
 
 
     #data frame para almacenar o ordenar los datos
-    data = pd.DataFrame(columns=['Nombre','Clasificacion','Sitio_web','Seguidores','Resumen','Antiguedad','Empleados','Link_profile','Verificacion'])
+    data = pd.DataFrame(columns=['Nombre','Clasificacion','Ciudad','Sitio_web','Seguidores','Resumen','Empleados','Link_profile','Verificacion'])
 
     #metodo constructor
     def __init__(self):
@@ -45,6 +45,9 @@ class Extract():
                 3-de dicha pestaña, se puede extraer toda la informacion necesaria
 
         """
+        #vaciar el dataframe
+        self.data = self.data[0:0]
+
         #almacenamos el driver para el uso global
         self.driver=driver
 
@@ -57,7 +60,9 @@ class Extract():
                 """
                 print('error en una extraccion')
 
+        return self.data
 
+        
 
     #visit the enterprise profile
     def visit_and_extract_link(self,link):
@@ -109,17 +114,31 @@ class Extract():
 
 
         #imprimir los datos
-        print({
-            "Nombre Empresa": nombre_empresa,
-            "Clasificación": clasificacion,
+        datos={
+            "Nombre": nombre_empresa,
+            "Clasificacion": clasificacion,
             "Ciudad": ciudad,
             "Seguidores": seguidores,
             "Empleados": empleados,
-            "Link Web": link_web,
+            "Sitio_web": link_web,
             "Resumen": resumen,
-            "Verificación": verificacion,
-            "Link de linkedin":link
-        })
+            "Verificacion": verificacion,
+            "Link_profile":link
+        }
+        #save the register
+        self._register_data(datos)
+        
+
+    #save data in the dataframe
+    def _register_data(self,datos:dict):
+        """
+            Esta funcion almacena los datos en un registro para un dataframe
+        """
+        #generar un nuevo dataframe
+        nuevos_dataframe = pd.DataFrame([datos])
+        
+        #agregar el registro
+        self.data = pd.concat([self.data,nuevos_dataframe],ignore_index=True)
 
 
     #extract the employees
