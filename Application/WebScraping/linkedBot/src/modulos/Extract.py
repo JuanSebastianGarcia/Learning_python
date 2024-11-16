@@ -5,10 +5,9 @@
         3-sitio web(opcional)
         4-numero de seguidores
         5-resumen
-        6-tiempo de antiguedad
-        7-numero de empleados
-        8-link de perfil en linkedin
-        9-si la cuenta es verificada o no
+        6-numero de empleados
+        7-link de perfil en linkedin
+        8-si la cuenta es verificada o no
 
     Extrae toda la anteior informacion, y la devuelve en un dataframe con los datos almacenados.
 """
@@ -77,12 +76,12 @@ class Extract():
         #usamos beauty para manipular la pagina
         soup=BeautifulSoup(self.driver.page_source,'html.parser')
 
-        self.extract_data(soup)
+        self.extract_data(soup,link)
 
 
 
     #extract data in the page
-    def extract_data(self, page_soup: BeautifulSoup):
+    def extract_data(self, page_soup: BeautifulSoup,link):
         """
         Extrae los datos principales de la página y los organiza.
         
@@ -94,7 +93,10 @@ class Extract():
         nombre_empresa = self._extract_company_name(page_soup)
 
         # Extrae la información general (clasificación, ciudad, seguidores, empleados)
-        clasificacion, ciudad, seguidores, empleados = self._extract_general_info(page_soup)
+        clasificacion, ciudad, seguidores = self._extract_general_info(page_soup)
+
+        #extract count employees
+        empleados = self._extract_employees(page_soup)
 
         # Extrae el enlace del sitio web
         link_web = self._extract_website_link(page_soup)
@@ -105,10 +107,8 @@ class Extract():
         # Verifica si la empresa tiene una insignia de verificación
         verificacion = self._extract_verification_status(page_soup)
 
-        # Extrae el tiempo de antigüedad
-        tiempo_antiguedad = self._extract_time(page_soup)
 
-        # (Aquí podrías almacenar los datos en un DataFrame o realizar más acciones)
+        #imprimir los datos
         print({
             "Nombre Empresa": nombre_empresa,
             "Clasificación": clasificacion,
@@ -118,9 +118,23 @@ class Extract():
             "Link Web": link_web,
             "Resumen": resumen,
             "Verificación": verificacion,
-            "Antigüedad": tiempo_antiguedad
+            "Link de linkedin":link
         })
 
+
+    #extract the employees
+    def _extract_employees(self,page:BeautifulSoup):
+        """
+            Extraer numero de empleados
+        """
+        #extraer el elemento que tiene el numero de empleados
+        element_employees = page.find('span',{'class':'link-without-hover-state'})
+
+        #si se encontro el elemento
+        if element_employees:
+            return element_employees.text.strip()
+        
+        return ''
 
     #extraer el nombre de la empresa
     def _extract_company_name(self, page_soup):
@@ -151,22 +165,23 @@ class Extract():
         clasificacion = ''
         ciudad = ''
         seguidores = ''
-        empleados = ''
 
-        #si los elementos son 3, entonces la se extrae en base a la estructura
+        #si los elementos son 3 existe la ciudad
         if len(bloques_informacion) == 3:
-            clasificacion = bloques_informacion[0].text.strip()
-            seguidores = bloques_informacion[1].text.strip()
-            empleados = bloques_informacion[2].text.strip()
 
-        #si los elementos son 4, se extrae en base a otra estructura
-        elif len(bloques_informacion) == 4:
             clasificacion = bloques_informacion[0].text.strip()
             ciudad = bloques_informacion[1].text.strip()
             seguidores = bloques_informacion[2].text.strip()
-            empleados = bloques_informacion[3].text.strip()
 
-        return clasificacion, ciudad, seguidores, empleados
+            
+        #si los elementos son 2, no hay ciudad
+        elif len(bloques_informacion) == 2:
+
+            clasificacion = bloques_informacion[0].text.strip()
+            seguidores = bloques_informacion[1].text.strip()
+
+           
+        return clasificacion, ciudad, seguidores
 
 
     #extraer el link de la web
@@ -175,7 +190,7 @@ class Extract():
             Extrae el enlace del sitio web de la empresa.
         """
         #elemento que tiene el enlace
-        button_web_site = page_soup.find('a', {'class': 'rg-top-card-primary-actions__action'})
+        button_web_site = page_soup.find('a', {'class': 'org-top-card-primary-actions__action'})
         
         #verificar si existe y si tiene el link
         if button_web_site and button_web_site.get('href'):
@@ -214,15 +229,3 @@ class Extract():
         return verificacion_existente is not None
 
 
-    #extraer tiempo de antiguedad
-    def _extract_time(self, page_soup):
-        """
-            Extrae el tiempo de antigüedad de la empresa.
-        """
-        #elemento que contiene el tiempo y otro dato
-        elementos_antiguedad = page_soup.find_all('span', {'class': 'text-display-small'})
-
-        #si aparecen los dos datos, se tiene el tiempo
-        if len(elementos_antiguedad) == 2:
-            return elementos_antiguedad[1].text.strip()#extraer el tiempo y retornarlo
-        return ''
