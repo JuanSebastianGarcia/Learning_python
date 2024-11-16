@@ -38,6 +38,7 @@ import logging as log  # Gestión de logs para registrar eventos del programa
 # Módulos personalizados del proyecto
 from modulos.Login import Login  # Módulo para manejar la lógica de inicio de sesión
 from modulos.Search import Search  # Módulo para realizar búsquedas específicas
+from modulos.Extract import Extract #Modulo para realizar la extraccion de datos
 
 
 class LinkedBot():
@@ -55,7 +56,8 @@ class LinkedBot():
     def __init__(self) -> None:
         self.links=[]#variable para almacenar los links extraidos
         self.login_module=Login() #modulo para el login
-        self.serach_module=Search() #modulo para la busqueda
+        self.search_module=Search() #modulo para la busqueda
+        self.extract_module=Extract() #modulo para la extraccion
         pass
 
 
@@ -96,7 +98,19 @@ class LinkedBot():
 
         #search people
         self.search()
+
+        #extract info of profiles
+        self.extract()
         
+    #extract info and data of profile
+    def extract(self):
+        """
+            Esta funcion se encarga de iniciar el proceso de extraccion, llamando el modulo
+            requerido y enviando los links optenidos en search
+        """
+        self.extract_module.extract(self.links,self.driver)
+
+
 
         
     #search people
@@ -109,7 +123,7 @@ class LinkedBot():
         self.links=[]
 
         #solicitar los links
-        self.links = self.serach_module.search(self.driver,log)
+        self.links = self.search_module.search(self.driver,log)
 
         print(self.links)
 
@@ -225,7 +239,6 @@ class LinkedBot():
             altura_actual+=avance
             self.driver.execute_script(f"window.scrollTo(0, {altura_actual});")
             time.sleep(duracion_avence)
-
 
 
 
