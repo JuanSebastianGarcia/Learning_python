@@ -11,7 +11,11 @@ from selenium.webdriver.support import expected_conditions as EC  # Condiciones 
 
 # Librerías adicionales
 from bs4 import BeautifulSoup  # Análisis y parsing del contenido HTML
-import time                    # Manejo de pausas y esperas en el flujo de ejecución
+import time
+from selenium.webdriver.chrome.service import Service  # Manejo del servicio de ChromeDriver para controlar el navegador
+from selenium.webdriver.chrome.options import Options  # Configuración avanzada del navegador Chrome (ej. modo headless)
+
+import os                    # Manejo de pausas y esperas en el flujo de ejecución
 
 
 class Search():
@@ -89,16 +93,22 @@ class Search():
         #buscar los elementos q¿que contiene los titulos de cada empresa
         elements = soup.find_all('span',{'class':'entity-result__title-text'})
 
-        #recorrer los elementos
-        for element in elements:
-            
-            #se extrae el subelemento que contiene el link
-            sub_element=element.select_one("a.app-aware-link")
+        if elements:
+            #recorrer los elementos
+            for element in elements:
+                
+                #se extrae el subelemento que contiene el link
+                sub_element=element.select_one("a.app-aware-link")
 
-            if sub_element and sub_element.get('href'):#si existe el href(link) se procede
-                self.links.append(sub_element['href'])
-                log.info('link extraido')
-        
+                if sub_element and sub_element.get('href'):#si existe el href(link) se procede
+                    self.links.append(sub_element['href'])
+                    log.info('link extraido')
+        else:
+            """
+                No se encontraron elementos
+            """
+            #se actualiza la pagina porque ya no hay mas resultados
+            self.pagina_actual=100
     
     
     #verify if in one page something is wrong

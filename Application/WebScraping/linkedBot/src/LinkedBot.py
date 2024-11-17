@@ -40,17 +40,24 @@ from modulos.Login import Login  # Módulo para manejar la lógica de inicio de 
 from modulos.Search import Search  # Módulo para realizar búsquedas específicas
 from modulos.Extract import Extract #Modulo para realizar la extraccion de datos
 from modulos.Save import Save # Modulo para guardar los datos
+from logging.handlers import RotatingFileHandler
+import logging
 
 
 class LinkedBot():
 
 
-    # Configuración global del archivo de log
-    log.basicConfig(
-        filename='linkedbot_flujo.log',    # Nombre del archivo de log
-        level=log.INFO,               # Nivel mínimo de mensajes que se registrarán
-        format='%(asctime)s - %(levelname)s - %(message)s'  # Formato del log
+    #configuracion del log
+    logging.basicConfig(
+        level=logging.INFO,  # Nivel de registro
+        format='%(asctime)s - %(levelname)s - %(message)s',  # Formato del mensaje
+        handlers=[
+            logging.FileHandler('linkebot.log', mode='a', encoding='utf-8'),
+            logging.StreamHandler()  # Para mostrar los logs en la consola
+        ]
     )
+
+
 
 
     #constructor
@@ -60,6 +67,7 @@ class LinkedBot():
         self.search_module=Search() #modulo para la busqueda
         self.extract_module=Extract() #modulo para la extraccion
         self.save_module=Save() # Modulo para guardar los datos
+        
         pass
 
 
@@ -90,7 +98,7 @@ class LinkedBot():
             Además, el bot está configurado para incluir tiempos de espera en puntos específicos y utilizar encabezados personalizados para mantener 
             un bajo perfil. También cuenta con un sistema de detección de captchas, el cual alertará al usuario en caso de que aparezcan.
         """
-        log.info('Iniciando linkedbot')
+        
 
         #iniciar sesion    
         self.login()
@@ -119,6 +127,9 @@ class LinkedBot():
         """
             Esta funcion hace el llamado al modulo de save para almacenar la informaicon
         """
+
+        logging.info('Almacenando los datos empresariales extraidos')
+
         #almacenar la informacion
         self.save_module.save(self.new_data)
 
@@ -130,7 +141,8 @@ class LinkedBot():
             Esta funcion se encarga de iniciar el proceso de extraccion, llamando el modulo
             requerido y enviando los links optenidos en search
         """
-        
+        logging.info('Extrayendo datos de las empresas...')
+
         #extraer la informacion y almacenarla
         self.new_data = self.extract_module.extract(self.links,self.driver)
 
@@ -142,6 +154,8 @@ class LinkedBot():
             Esta funcion es la encargada de gestionar la busqeuda, llamando la
             funcion principal del modulo de busqueda y almacenando los links
         """
+        logging.info('Buscando empresas...')
+
         #vaciar los links anteriores
         self.links=[]
 
@@ -187,7 +201,6 @@ class LinkedBot():
             
             self.go_and_back()
         
-        log.info('Movimiento aleatorio hecho')
 
 
 
@@ -284,7 +297,7 @@ class LinkedBot():
             ingresara a linkedin
         """
         try:
-            log.info('ingresando a la cuenta')
+            logging.info('Se esta iniciando sesion')
 
             #cargar driver
             self.driver=self.cargar_driver(True)
@@ -300,7 +313,7 @@ class LinkedBot():
             #refrescar la pagina
             self.driver.refresh()
 
-            log.info(f'ingreso satisfactorio')
+            log.info(f'Ingreso satisfactorio a linkedin')
         except:
             #error en el login
             print(f'{time.time()} OCURRIO UN ERROR EN EL PROCESO DE LOGIN')
