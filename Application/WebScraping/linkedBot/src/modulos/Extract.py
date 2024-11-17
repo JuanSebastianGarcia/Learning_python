@@ -11,16 +11,24 @@
 
     Extrae toda la anteior informacion, y la devuelve en un dataframe con los datos almacenados.
 """
-from selenium import webdriver
-import pandas as pd
-
+# Librerías de terceros (instaladas mediante pip)
+import pandas as pd  # Manejo de datos tabulares
+from selenium import webdriver  # Automatización de navegadores
 from bs4 import BeautifulSoup  # Análisis y parsing del contenido HTML
+
+from selenium.webdriver.support.ui import WebDriverWait  # Gestión de esperas explícitas en Selenium para sincronizar la interacción con la web
+from selenium.webdriver.support import expected_conditions as EC  # Condiciones para esperar eventos específicos (como que un elemento sea visible)
+from selenium.webdriver.common.by import By  # Selección de elementos en la página usando diversos localizadores (ID, clase, etc.)
+
+# Importaciones estándar de Python (si necesitas alguna más, agrégala aquí)
+import os
+import time
 
 class Extract():
 
 
     #data frame para almacenar o ordenar los datos
-    data = pd.DataFrame(columns=['Nombre','Clasificacion','Ciudad','Sitio_web','Seguidores','Resumen','Empleados','Link_profile','Verificacion'])
+    data = pd.DataFrame(columns=['Nombre','Clasificacion','Ciudad','Sitio_web','Seguidores','Empleados','Link_profile','Verificacion','Resumen'])
 
     #metodo constructor
     def __init__(self):
@@ -53,7 +61,7 @@ class Extract():
 
         for link in links:
             try:
-                self.visit_and_extract_link(link)
+                self._visit_and_extract_link(link)
             except:
                 """
                 
@@ -65,7 +73,7 @@ class Extract():
         
 
     #visit the enterprise profile
-    def visit_and_extract_link(self,link):
+    def _visit_and_extract_link(self,link):
         """
             Esta funcion se encarga de viajar a cada pefil y comenzar a ejecutar su extraccion
 
@@ -78,12 +86,15 @@ class Extract():
         #se optiene la pagina
         self.driver.get(link)
 
+        #verificar un posible capcha
+        self.verificar_captcha(codigo='global-nav-typeahead',link_base=link)
+
         #usamos beauty para manipular la pagina
         soup=BeautifulSoup(self.driver.page_source,'html.parser')
 
         self.extract_data(soup,link)
 
-
+    
 
     #extract data in the page
     def extract_data(self, page_soup: BeautifulSoup,link):
@@ -114,17 +125,17 @@ class Extract():
 
 
         #imprimir los datos
-        datos={
+        datos = {
             "Nombre": nombre_empresa,
             "Clasificacion": clasificacion,
             "Ciudad": ciudad,
+            "Sitio_web": link_web,
             "Seguidores": seguidores,
             "Empleados": empleados,
-            "Sitio_web": link_web,
-            "Resumen": resumen,
+            "Link_profile": link,
             "Verificacion": verificacion,
-            "Link_profile":link
-        }
+            "Resumen": resumen
+        }   
         #save the register
         self._register_data(datos)
         
@@ -141,6 +152,7 @@ class Extract():
         self.data = pd.concat([self.data,nuevos_dataframe],ignore_index=True)
 
 
+
     #extract the employees
     def _extract_employees(self,page:BeautifulSoup):
         """
@@ -154,6 +166,7 @@ class Extract():
             return element_employees.text.strip()
         
         return ''
+
 
     #extraer el nombre de la empresa
     def _extract_company_name(self, page_soup):
@@ -230,8 +243,13 @@ class Extract():
 
         #si el elemento existe, el resumen esta
         if bloque_resumen:
+
+            resumen = bloque_resumen.text.strip()
+
+            resumen = str(resumen).replace('\n','')
+
             #retornar resumen
-            return bloque_resumen.text.strip()
+            return resumen
         
         return ''
 
@@ -247,4 +265,86 @@ class Extract():
         #si existe, esta verificado y se retorna True
         return verificacion_existente is not None
 
+    #verify if in one page something is wrong
+    def verificar_captcha(self,codigo,link_base):
+        """
+            Este metodo, para verificar si un capcha o algo inusual aparecio, usa el id
+            que recibe por parametro para hacer una busqueda de ese objeto, ya sea boton, etiqueta o campo de texto.
+            en caso de que no este presente, significa que algo ocurrio que no se esperaba y se alertara al usurio
+        
+            parametros:
+                *codigo: este codigo debera ser un id
+        """
+        try:
+            boton = WebDriverWait(self.driver,5).until(
+                EC.presence_of_element_located((By.ID, codigo))
+            )
 
+        except:
+            print('Anormalidad detectada, abriendo una ventana para revision')
+
+            #datos actuales para reabrir un driver
+            cookies_current=self.driver.get_cookies()
+            url_current=self.driver.current_url
+
+            self.driver.quit()#cerramos el driver 
+
+            #nuevo driver con imagen
+            driver_temporal = self.cargar_driver(True)
+
+            #volver a la misma pagina donde aparecio la anormalidad
+            driver_temporal.get(url_current)
+            
+            #agregar las cookies
+            for cookie in cookies_current:
+                driver_temporal.add_cookie(cookie)
+
+            time.sleep(2)
+
+            #volver a la misma pagina donde aparecio la anormalidad
+            driver_temporal.get(url_current)
+
+            #se hace una espera de 100 segundos para resolver el capcha o la anormalidad
+            time.sleep(100)
+
+            #cerramos el driver temporal
+            driver_temporal.quit()
+
+            #despues de 10 segundos, el driver se restaura y continua su proceso
+            self.driver=self.cargar_driver(False)
+
+            #volver a la misma pagina donde aparecio la anormalidad
+            self.driver.get(link_base)
+            
+            #agregar las cookies
+            for cookie in cookies_current:
+                self.driver.add_cookie(cookie)
+
+            #refrescar la pagina
+            self.driver.refresh()
+
+
+    #inicializa el driver para navefar
+    def cargar_driver(self,ventana_activa:bool):
+        """
+            Cargar el driver de google, con el cual podremos navegar en las paginas de internet
+            e interactuar dinamicamente con dichas paginas. 
+            
+            parametros
+                ventana_activa: es un boolean en el cual si llega un True, indica que se debe
+                abrir una ventana, si es False, indica que la ventana debe estar cerrada
+        """
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        direccion = os.path.join(base_dir, '../drivers', 'chromedriver.exe')
+
+        # Configurar opciones de Chrome
+        chrome_options = Options()
+
+        #activar la ventana de chrome
+        if ventana_activa == False:
+            chrome_options.add_argument("--headless")  # Activar modo headless
+
+        # Iniciar el navegador de Chrome con ChromeDriver
+        driver = webdriver.Chrome(service=Service(direccion),options=chrome_options)
+
+        return driver

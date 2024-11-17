@@ -39,6 +39,7 @@ import logging as log  # Gestión de logs para registrar eventos del programa
 from modulos.Login import Login  # Módulo para manejar la lógica de inicio de sesión
 from modulos.Search import Search  # Módulo para realizar búsquedas específicas
 from modulos.Extract import Extract #Modulo para realizar la extraccion de datos
+from modulos.Save import Save # Modulo para guardar los datos
 
 
 class LinkedBot():
@@ -58,6 +59,7 @@ class LinkedBot():
         self.login_module=Login() #modulo para el login
         self.search_module=Search() #modulo para la busqueda
         self.extract_module=Extract() #modulo para la extraccion
+        self.save_module=Save() # Modulo para guardar los datos
         pass
 
 
@@ -101,15 +103,36 @@ class LinkedBot():
 
         #extract info of profiles
         self.extract()
-        
+
+        #save data
+        self.save()
+
+        #se finaliza la conexion
+        self.driver.quit()
+
+        self.start()
+
+
+
+    #save data of enterprise
+    def save(self):
+        """
+            Esta funcion hace el llamado al modulo de save para almacenar la informaicon
+        """
+        #almacenar la informacion
+        self.save_module.save(self.new_data)
+
+
+
     #extract info and data of profile
     def extract(self):
         """
             Esta funcion se encarga de iniciar el proceso de extraccion, llamando el modulo
             requerido y enviando los links optenidos en search
         """
-        self.extract_module.extract(self.links,self.driver)
-
+        
+        #extraer la informacion y almacenarla
+        self.new_data = self.extract_module.extract(self.links,self.driver)
 
 
         
@@ -142,7 +165,7 @@ class LinkedBot():
         time.sleep(1)
 
         #se elije la opcion aleatoria
-        option = 3#random.randint(1,4)
+        option = random.randint(1,4)
 
         #movimientos aleatorios con el mouse
         if option == 1:
@@ -241,7 +264,6 @@ class LinkedBot():
             time.sleep(duracion_avence)
 
 
-
     #move mouse random in the page
     def move_mouse_random(self):
         """
@@ -253,7 +275,6 @@ class LinkedBot():
         acciones.move_by_offset(random.randint(20,150),random.randint(10,100)).perform()#movimiento por coordenadas
         time.sleep(1)#esperar un tiempo
         acciones.move_by_offset(random.randint(20,150),random.randint(10,100)).perform()#movimiento por coordenadas
-
 
 
     #iniciar sesion
