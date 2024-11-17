@@ -67,8 +67,6 @@ class Search():
         #extraer los links
         self.extract_links(log)
 
-        log.info('Links de empresas fueron extraidos')
-
         #update the variables that use in the search
         self.update_page_letter(log)
 
@@ -102,7 +100,6 @@ class Search():
 
                 if sub_element and sub_element.get('href'):#si existe el href(link) se procede
                     self.links.append(sub_element['href'])
-                    log.info('link extraido')
         else:
             """
                 No se encontraron elementos
@@ -199,7 +196,7 @@ class Search():
 
 
     #Update variables 'letra_actual' and 'pagina_actual'
-    def update_page_letter(self,log):
+    def update_page_letter(self):
         """
             Esta funcion se encarga de actualizar las variables de letra actual y pagina actual.
             hay dos posibilidades de actualizacion
@@ -209,9 +206,8 @@ class Search():
         if(self.pagina_actual==100):
             self.pagina_actual=0
             self.letra_actual = chr(ord(self.letra_actual)+1)
-            log.info('letra y pagina actualizados')
+            
         else:
             self.pagina_actual+=1
-            log.info('pagina actualizada')
 
         

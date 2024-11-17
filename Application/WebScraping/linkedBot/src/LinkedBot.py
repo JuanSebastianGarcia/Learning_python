@@ -33,7 +33,6 @@ import requests  # Envío de solicitudes HTTP y obtención de datos de sitios we
 import time  # Control de pausas y esperas en el flujo del programa
 import os  # Interacción con el sistema operativo, como la gestión de rutas y archivos
 import random  # Generación de valores aleatorios para diferentes usos (ej. esperas aleatorias entre solicitudes)
-import logging as log  # Gestión de logs para registrar eventos del programa
 
 # Módulos personalizados del proyecto
 from modulos.Login import Login  # Módulo para manejar la lógica de inicio de sesión
@@ -141,10 +140,13 @@ class LinkedBot():
             Esta funcion se encarga de iniciar el proceso de extraccion, llamando el modulo
             requerido y enviando los links optenidos en search
         """
-        logging.info('Extrayendo datos de las empresas...')
+        try:
+            logging.info('Extrayendo datos de las empresas...')
 
-        #extraer la informacion y almacenarla
-        self.new_data = self.extract_module.extract(self.links,self.driver)
+            #extraer la informacion y almacenarla
+            self.new_data = self.extract_module.extract(self.links,self.driver)
+        except:
+            logging.warning('ocurrio un error en el proceso de extraccion')
 
 
         
@@ -154,15 +156,20 @@ class LinkedBot():
             Esta funcion es la encargada de gestionar la busqeuda, llamando la
             funcion principal del modulo de busqueda y almacenando los links
         """
-        logging.info('Buscando empresas...')
+        try:
+            logging.info('Buscando empresas...')
 
-        #vaciar los links anteriores
-        self.links=[]
+            #vaciar los links anteriores
+            self.links=[]
 
-        #solicitar los links
-        self.links = self.search_module.search(self.driver,log)
+            #solicitar los links
+            self.links = self.search_module.search(self.driver,log)
 
-        print(self.links)
+
+            print(self.links)
+        except:
+            logging.warning('Ocurrio un error en el proceso de busqueda')
+
 
 
 
@@ -313,10 +320,30 @@ class LinkedBot():
             #refrescar la pagina
             self.driver.refresh()
 
-            log.info(f'Ingreso satisfactorio a linkedin')
+            #verificar captcha
+            self.verificar_login()
+
+
+            logging.info(f'Ingreso satisfactorio a linkedin')
         except:
             #error en el login
-            print(f'{time.time()} OCURRIO UN ERROR EN EL PROCESO DE LOGIN')
+            logging.warning('ocurrio un problema en el login')
+
+
+
+    #verificar si se inicio correctamente
+    def verificar_login(self):
+        """
+            Esta funcion se encarga de verificar si una cuenta si inicio session correctamente
+            . en caso de que no, se iniciara con otra cuenta
+        """
+        try:
+            boton = WebDriverWait(self.driver,5).until(
+                EC.presence_of_element_located((By.ID,'global-nav-typeahead' ))
+            )
+        except:
+            logging.warning('No se pudo iniciar con una cuenta, iniciando sesion con otra cuenta')
+
 
 
     #verify if in one page something is wrong
@@ -335,7 +362,7 @@ class LinkedBot():
             )
 
         except:
-            print('Anormalidad detectada, abriendo una ventana para revision')
+            logging.warning('Anormalidad detectada, abriendo una ventana para revision')
 
             #datos actuales para reabrir un driver
             cookies_current=self.driver.get_cookies()

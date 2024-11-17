@@ -55,6 +55,7 @@ class Extract_key_session():
             #add credentials
             self.add_credentials(item['user'],item['password'])
 
+
             #extract cookie
             cookies = self.extract_cookie()
 
@@ -121,6 +122,8 @@ class Extract_key_session():
         #press enter
         password_input.submit()
 
+        time.sleep(200)
+
 
 
     #extract the cookie of session
@@ -157,4 +160,9 @@ class Extract_key_session():
         #save dataframe
         df.to_csv(direccion,index=False)
 
+""""
+if __name__=='__main__':
+    objeto = Extract_key_session()
 
+    objeto.start_extract()
+"""

@@ -25,7 +25,7 @@ class Login():
     def __init__(self):
         self.index=1 #index se usa para saber registro de cookies se esta usando
         self.extract_key_session=Extract_key_session()
-        pass
+        
 
 
     #obtener una cookie de session
