@@ -19,6 +19,9 @@ from bs4 import BeautifulSoup  # Análisis y parsing del contenido HTML
 from selenium.webdriver.support.ui import WebDriverWait  # Gestión de esperas explícitas en Selenium para sincronizar la interacción con la web
 from selenium.webdriver.support import expected_conditions as EC  # Condiciones para esperar eventos específicos (como que un elemento sea visible)
 from selenium.webdriver.common.by import By  # Selección de elementos en la página usando diversos localizadores (ID, clase, etc.)
+from selenium.webdriver.chrome.options import Options  # Configuración avanzada del navegador Chrome (ej. modo headless)
+from selenium.webdriver.chrome.service import Service  # Manejo del servicio de ChromeDriver para controlar el navegador
+
 
 # Importaciones estándar de Python (si necesitas alguna más, agrégala aquí)
 import os
@@ -246,7 +249,7 @@ class Extract():
 
             resumen = bloque_resumen.text.strip()
 
-            resumen = str(resumen).replace('\n','')
+            resumen = str(resumen).replace("\r\n", " ").replace("\r", " ").replace("\n", " ").strip()
 
             #retornar resumen
             return resumen

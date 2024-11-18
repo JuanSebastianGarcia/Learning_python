@@ -427,10 +427,6 @@ class LinkedBot():
             chrome_options.add_argument("--headless")  # Activar modo headless
 
 
-        #agregar un user agent
-        #chrome_options.add_argument(f"user-agent={self.obtain_user_agent()}")
-
-
         # Iniciar el navegador de Chrome con ChromeDriver
         driver = webdriver.Chrome(service=Service(direccion),options=chrome_options)
 
