@@ -36,7 +36,7 @@ class Search():
 
 
     #search Enterprise
-    def search(self, driver:webdriver,log):
+    def search(self, driver:webdriver):
         """
             Esta funcion se encargara de hacer una solicitud de empresas con la propia api de busqueda.
             las empresas que se  busacaran, lo hara en orden alfabetico [a-z] y,  extraera los links de cada perfil que 
@@ -65,10 +65,10 @@ class Search():
         self.verificar_captcha(codigo='global-nav-typeahead',link_base=link)
 
         #extraer los links
-        self.extract_links(log)
+        self.extract_links()
 
         #update the variables that use in the search
-        self.update_page_letter(log)
+        self.update_page_letter()
 
         return self.links 
 
@@ -78,7 +78,7 @@ class Search():
     
     
     #extract profile links
-    def extract_links(self,log):
+    def extract_links(self):
         """
             Esta funcion se encarga de extraer los links de los perfiles de las empresas
         

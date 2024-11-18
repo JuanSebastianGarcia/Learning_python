@@ -59,6 +59,7 @@ class LinkedBot():
 
 
 
+
     #constructor
     def __init__(self) -> None:
         self.links=[]#variable para almacenar los links extraidos
@@ -163,7 +164,7 @@ class LinkedBot():
             self.links=[]
 
             #solicitar los links
-            self.links = self.search_module.search(self.driver,log)
+            self.links = self.search_module.search(self.driver)
 
 
             print(self.links)
@@ -425,11 +426,29 @@ class LinkedBot():
         if ventana_activa == False:
             chrome_options.add_argument("--headless")  # Activar modo headless
 
+
+        #agregar un user agent
+        #chrome_options.add_argument(f"user-agent={self.obtain_user_agent()}")
+
+
         # Iniciar el navegador de Chrome con ChromeDriver
         driver = webdriver.Chrome(service=Service(direccion),options=chrome_options)
 
         return driver
 
+    #obtener un user agent
+    def obtain_user_agent(self):
+        """
+            Esta funcion devuelve un user agent aleatorio para ser usado en el driver
+        """
+        user_agent_list=[
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.5993.89 Safari/537.36',
+            'Mozilla/5.0 (Linux; Android 12; SM-G998B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.5993.89 Mobile Safari/537.36',
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 12_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.5993.89 Safari/537.36'
+            ]
+
+        #retornar un user agent aleatorio
+        return user_agent_list[random.choice(user_agent_list)]
 
 
 if __name__=='__main__':
