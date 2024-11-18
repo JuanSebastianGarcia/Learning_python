@@ -23,7 +23,7 @@ class Extract_key_session():
     """
     credentials={
                 'user1':{'user':'jimenezantonio0274@gmail.com','password':'lizandro123'},
-                'user2':{'user':'shernandez928@cue.edu.co ','password':'stefaniahernandez123'},
+                'user2':{'user':'shernandez928@cue.edu.co','password':'stefaniahernandez123'},
                 'user3':{'user':'marthizavp@hotmail.com','password':'martha123'},
     }
 

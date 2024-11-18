@@ -83,19 +83,26 @@ class Extract():
             parametros
                 -link - link a visitar
         """
-        #se especifica la pestaña para el link
-        link=link+'about/'
+        try:
+            #se especifica la pestaña para el link
+            link=link+'about/'
 
-        #se optiene la pagina
-        self.driver.get(link)
+            #se optiene la pagina
+            self.driver.get(link)
 
-        #verificar un posible capcha
-        self.verificar_captcha(codigo='global-nav-typeahead',link_base=link)
+            #verificar un posible capcha
+            self.verificar_captcha(codigo='global-nav-typeahead',link_base=link)
 
-        #usamos beauty para manipular la pagina
-        soup=BeautifulSoup(self.driver.page_source,'html.parser')
+            #usamos beauty para manipular la pagina
+            soup=BeautifulSoup(self.driver.page_source,'html.parser')
 
-        self.extract_data(soup,link)
+            self.extract_data(soup,link)
+        except:
+            """
+                Este error salta por si al buscar una empresa y extraer su informacion, falla
+                y que no se extienda el error al resto del proceso
+            """
+            print('fallo una extraccion de una empresa')
 
     
 

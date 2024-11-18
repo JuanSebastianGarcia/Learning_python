@@ -67,9 +67,6 @@ class Search():
         #extraer los links
         self.extract_links()
 
-        #update the variables that use in the search
-        self.update_page_letter()
-
         return self.links 
 
 
@@ -92,6 +89,7 @@ class Search():
         elements = soup.find_all('span',{'class':'entity-result__title-text'})
 
         if elements:
+
             #recorrer los elementos
             for element in elements:
                 
@@ -100,12 +98,19 @@ class Search():
 
                 if sub_element and sub_element.get('href'):#si existe el href(link) se procede
                     self.links.append(sub_element['href'])
+                
+            #update the variables that use in the search
+            self.update_page_letter()
+        
         else:
             """
                 No se encontraron elementos
             """
             #se actualiza la pagina porque ya no hay mas resultados
             self.pagina_actual=100
+            
+            #update the variables that use in the search
+            self.update_page_letter()
     
     
     #verify if in one page something is wrong

@@ -2,8 +2,8 @@
 
 LINKEDBOT 
 
-Descripcion: linkedbot es un bot diseñado y desarrollado para extraer la informacion de usuarios de linkedin relacionada con 
-la experiencia laboral, ademas, linkedbot esta diseñado para enfrentarse y superar una variedad de detecciones, cambiando constantemente
+Descripcion: linkedbot es un bot diseñado y desarrollado para extraer la informacion de Empresas de linkedin.
+ linkedbot esta diseñado para enfrentarse y superar una variedad de detecciones, cambiando constantemente
 de cookies de sesion, simulacion de headers, movimientos aleatorios y tiempos de espera que eviten al maximo la deteccion
 el bot se encargara de almacenar los datos extraidos y actualizar un archivo .log
 con el fin de observar los datos que se van almacenando
@@ -12,7 +12,7 @@ Modulos
     Login - encargado de trabajar en el logeo con cookies de session
     Search - realiza las busquedas de n usuarios
     Extraction - extrae la informacion de cada usuario
-    save - almacena la informacion en un csv y actualiza un archivo .log
+    save - almacena la informacion en un csv
 
     aprendizajes:
         *estructura de una cookie
@@ -29,7 +29,6 @@ from selenium.webdriver.chrome.options import Options  # Configuración avanzada
 from selenium.webdriver.common.action_chains import ActionChains  # Automatización de interacciones avanzadas, como arrastrar y soltar
 
 # Librerías para manejar peticiones HTTP y control de flujo
-import requests  # Envío de solicitudes HTTP y obtención de datos de sitios web
 import time  # Control de pausas y esperas en el flujo del programa
 import os  # Interacción con el sistema operativo, como la gestión de rutas y archivos
 import random  # Generación de valores aleatorios para diferentes usos (ej. esperas aleatorias entre solicitudes)
@@ -39,7 +38,6 @@ from modulos.Login import Login  # Módulo para manejar la lógica de inicio de 
 from modulos.Search import Search  # Módulo para realizar búsquedas específicas
 from modulos.Extract import Extract #Modulo para realizar la extraccion de datos
 from modulos.Save import Save # Modulo para guardar los datos
-from logging.handlers import RotatingFileHandler
 import logging
 
 
@@ -117,6 +115,8 @@ class LinkedBot():
 
         #se finaliza la conexion
         self.driver.quit()
+
+        logging.info('Cerrando session...')
 
         self.start()
 
@@ -343,7 +343,16 @@ class LinkedBot():
                 EC.presence_of_element_located((By.ID,'global-nav-typeahead' ))
             )
         except:
+            """
+                En caso de que no se inicie sesion correctamente, el bot informara, se cierra el driver 
+                y se vuelve a ejecutar el login para usar otra sesion
+            """
             logging.warning('No se pudo iniciar con una cuenta, iniciando sesion con otra cuenta')
+            logging.info('Cambiando a otra sesion')
+
+            self.driver.quit()
+
+            self.login()
 
 
 
