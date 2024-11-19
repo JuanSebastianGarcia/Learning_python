@@ -308,7 +308,7 @@ class LinkedBot():
             logging.info('Se esta iniciando sesion')
 
             #cargar driver
-            self.driver=self.cargar_driver(True)
+            self.driver=self.cargar_driver(False)
 
             #visitar la pagina de linkedin
             self.driver.get('https://www.linkedin.com/login')

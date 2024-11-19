@@ -23,8 +23,7 @@ class Extract_key_session():
     """
     credentials={
                 'user1':{'user':'jimenezantonio0274@gmail.com','password':'lizandro123'},
-                'user2':{'user':'isamarvp2300@gmail.com','password':'martha123'},
-                'user3':{'user':'garciajuan312002@gmail.com','password':'JSGA311002#linkedin'},
+                'user2':{'user':'isamarvp2300@gmail.com','password':'martha123'}
     }
 
 
@@ -159,8 +158,9 @@ class Extract_key_session():
         #save dataframe
         df.to_csv(direccion,index=False)
 
-
+""""
 if __name__=='__main__':
     objeto = Extract_key_session()
 
     objeto.start_extract()
+"""
